@@ -1,0 +1,16 @@
+vcom sbox1.vhd
+vcom sbox2.vhd
+vcom sbox3.vhd
+vcom sbox4.vhd
+vcom f.vhd
+vcom f_tb.vhd
+vcom fl128.vhd
+vcom fl256.vhd
+vcom 6round128.vhd
+vcom 6round256.vhd
+vcom keysched128.vhd
+vcom keysched256.vhd
+vcom camellia128.vhd
+vcom camellia256.vhd
+vcom camellia128_tb.vhd
+vcom camellia256_tb.vhd
