@@ -3,7 +3,7 @@
 -- Designer:      Paolo Fulgoni <pfulgoni@opencores.org>
 --
 -- Create Date:   02/19/2008
--- Last Update:   03/06/2008
+-- Last Update:   03/28/2008
 -- Project Name:  camellia-vhdl
 -- Description:   VHDL Test Bench for module camellia
 --
@@ -38,24 +38,30 @@ architecture RTL of camellia_tb is
                 clk        : in  STD_LOGIC;
                 reset      : in  STD_LOGIC;
                 data_in    : in  STD_LOGIC_VECTOR (0 to 127);
+                enc_dec    : in  STD_LOGIC;
+                data_rdy   : in  STD_LOGIC;
+                data_acq   : out STD_LOGIC;
                 key        : in  STD_LOGIC_VECTOR (0 to 255);
                 k_len      : in  STD_LOGIC_VECTOR (0 to 1);
-                new_key    : in  STD_LOGIC;
-                enc_dec    : in  STD_LOGIC;
-                input_rdy  : in  STD_LOGIC;
-                data_out   : out STD_LOGIC_VECTOR (0 to 127)
+                key_rdy    : in  STD_LOGIC;
+                key_acq    : out STD_LOGIC;
+                data_out   : out STD_LOGIC_VECTOR (0 to 127);
+                output_rdy : out STD_LOGIC
                 );
     end component;
 
     signal    clk        :  STD_LOGIC;
     signal    reset      :  STD_LOGIC;
     signal    data_in    :  STD_LOGIC_VECTOR (0 to 127);
+    signal    enc_dec    :  STD_LOGIC;
+    signal    data_rdy   :  STD_LOGIC;
+    signal    data_acq   :  STD_LOGIC;
     signal    key        :  STD_LOGIC_VECTOR (0 to 255);
     signal    k_len      :  STD_LOGIC_VECTOR (0 to 1);
-    signal    new_key    :  STD_LOGIC;
-    signal    enc_dec    :  STD_LOGIC;
-    signal    input_rdy  :  STD_LOGIC;
+    signal    key_rdy    :  STD_LOGIC;
+    signal    key_acq    :  STD_LOGIC;
     signal    data_out   :  STD_LOGIC_VECTOR (0 to 127);
+    signal    output_rdy :  STD_LOGIC;
 
     -- constants
     constant KLEN_128    : STD_LOGIC_VECTOR (0 to 1) := "00";
@@ -68,27 +74,29 @@ architecture RTL of camellia_tb is
 begin
 
     uut   : camellia
-        port map(clk, reset, data_in, key, k_len, new_key,
-                 enc_dec, input_rdy, data_out);
+        port map(clk, reset, data_in, enc_dec, data_rdy, data_acq,
+                 key, k_len, key_rdy, key_acq, data_out, output_rdy);
 
     tb    : process
     begin
         reset <= '1';
         wait for 15 ns;
         reset <= '0';
+        
         data_in   <= X"0123456789abcdeffedcba9876543210";
+        enc_dec   <= ENC;
+        data_rdy  <= '1';
         key       <= X"0123456789abcdeffedcba987654321000112233445566778899aabbccddeeff";
         k_len     <= KLEN_128;
-        new_key   <= '1';
-        enc_dec   <= '0';
-        input_rdy <= '1';
-        wait for 494 ns;
+        key_rdy   <= '1';
+        
+        wait until key_acq = '1';
+        key_rdy   <= '0';
+        
+        wait until data_acq = '1';
         data_in   <= X"67673138549669730857065648eabe43";
-        key       <= X"0123456789abcdeffedcba987654321000112233445566778899aabbccddeeff";
-        k_len     <= KLEN_128;
-        new_key   <= '0';
-        enc_dec   <= '1';
-        input_rdy <= '1';
+        enc_dec   <= DEC;
+        
         wait;
     end process;
 

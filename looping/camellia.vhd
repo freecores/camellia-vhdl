@@ -3,7 +3,7 @@
 -- Designer:      Paolo Fulgoni <pfulgoni@opencores.org>
 --
 -- Create Date:   02/01/2008
--- Last Update:   03/06/2008
+-- Last Update:   03/28/2008
 -- Project Name:  camellia-vhdl
 -- Description:   Looping version of Camellia
 --
@@ -31,35 +31,43 @@ entity camellia is
     port    (
             clk        : in  STD_LOGIC;
             reset      : in  STD_LOGIC;
+            
             data_in    : in  STD_LOGIC_VECTOR (0 to 127);
+            enc_dec    : in  STD_LOGIC;
+            data_rdy   : in  STD_LOGIC;
+            data_acq   : out STD_LOGIC;
+            
             key        : in  STD_LOGIC_VECTOR (0 to 255);
             k_len      : in  STD_LOGIC_VECTOR (0 to 1);
-            new_key    : in  STD_LOGIC;
-            enc_dec    : in  STD_LOGIC;
-            input_rdy  : in  STD_LOGIC;
-            data_out   : out STD_LOGIC_VECTOR (0 to 127)
+            key_rdy    : in  STD_LOGIC;
+            key_acq    : out STD_LOGIC;
+            
+            data_out   : out STD_LOGIC_VECTOR (0 to 127);
+            output_rdy : out STD_LOGIC
             );
 end camellia;
 
 architecture RTL of camellia is
-
-    signal s_clk        :  STD_LOGIC;
-    signal s_reset      :  STD_LOGIC;
-    signal s_data_in    :  STD_LOGIC_VECTOR (0 to 127);
-    signal s_key_in     :  STD_LOGIC_VECTOR (0 to 255);
-    signal s_k_len      :  STD_LOGIC_VECTOR (0 to 1);
-    signal s_new_key    :  STD_LOGIC;
-    signal s_enc_dec    :  STD_LOGIC;
-    signal s_input_rdy  :  STD_LOGIC;
-    signal s_nxt_input  :  STD_LOGIC;
-    signal s_data_to    :  STD_LOGIC_VECTOR (0 to 127);
-    signal s_k1         :  STD_LOGIC_VECTOR (0 to 63);
-    signal s_k2         :  STD_LOGIC_VECTOR (0 to 63);
-    signal s_newdata    :  STD_LOGIC;
-    signal s_sel        :  STD_LOGIC;
-    signal s_pre_xor    :  STD_LOGIC_VECTOR (0 to 127);
-    signal s_post_xor   :  STD_LOGIC_VECTOR (0 to 127);
-    signal s_data_from  :  STD_LOGIC_VECTOR (0 to 127);
+    
+    signal s_clk        : STD_LOGIC;
+    signal s_reset      : STD_LOGIC;
+    signal s_data_in    : STD_LOGIC_VECTOR (0 to 127);
+    signal s_enc_dec    : STD_LOGIC;
+    signal s_data_rdy   : STD_LOGIC;
+    signal s_data_acq   : STD_LOGIC;
+    signal s_key_in     : STD_LOGIC_VECTOR (0 to 255);
+    signal s_k_len      : STD_LOGIC_VECTOR (0 to 1);
+    signal s_key_rdy    : STD_LOGIC;
+    signal s_key_acq    : STD_LOGIC;
+    signal s_data_to    : STD_LOGIC_VECTOR (0 to 127);
+    signal s_output_rdy : STD_LOGIC;
+    signal s_k1         : STD_LOGIC_VECTOR (0 to 63);
+    signal s_k2         : STD_LOGIC_VECTOR (0 to 63);
+    signal s_newdata    : STD_LOGIC;
+    signal s_sel        : STD_LOGIC;
+    signal s_pre_xor    : STD_LOGIC_VECTOR (0 to 127);
+    signal s_post_xor   : STD_LOGIC_VECTOR (0 to 127);
+    signal s_data_from  : STD_LOGIC_VECTOR (0 to 127);
 
     component datapath is
         port    (
@@ -81,12 +89,15 @@ architecture RTL of camellia is
                 clk        : in  STD_LOGIC;
                 reset      : in  STD_LOGIC;
                 data_in    : in  STD_LOGIC_VECTOR (0 to 127);
+                enc_dec    : in  STD_LOGIC;
+                data_rdy   : in  STD_LOGIC;
+                data_acq   : out STD_LOGIC;
                 key_in     : in  STD_LOGIC_VECTOR (0 to 255);
                 k_len      : in  STD_LOGIC_VECTOR (0 to 1);
-                new_key    : in  STD_LOGIC;
-                enc_dec    : in  STD_LOGIC;
-                input_rdy  : in  STD_LOGIC;
+                key_rdy    : in  STD_LOGIC;
+                key_acq    : out STD_LOGIC;
                 data_to    : out STD_LOGIC_VECTOR (0 to 127);
+                output_rdy : out STD_LOGIC;
                 k1         : out STD_LOGIC_VECTOR (0 to 63);
                 k2         : out STD_LOGIC_VECTOR (0 to 63);
                 newdata    : out STD_LOGIC;
@@ -118,12 +129,15 @@ begin
                 clk        => s_clk,
                 reset      => s_reset,
                 data_in    => s_data_in,
+                enc_dec    => s_enc_dec,
+                data_rdy   => s_data_rdy,
+                data_acq   => s_data_acq,
                 key_in     => s_key_in,
                 k_len      => s_k_len,
-                new_key    => s_new_key,
-                enc_dec    => s_enc_dec,
-                input_rdy  => s_input_rdy,
+                key_rdy    => s_key_rdy,
+                key_acq    => s_key_acq,
                 data_to    => s_data_to,
+                output_rdy => s_output_rdy,
                 k1         => s_k1,
                 k2         => s_k2,
                 newdata    => s_newdata,
@@ -136,11 +150,15 @@ begin
     s_clk       <= clk;
     s_reset     <= reset;
     s_data_in   <= data_in;
+    s_enc_dec   <= enc_dec;
+    s_data_rdy  <= data_rdy;
     s_key_in    <= key;
     s_k_len     <= k_len;
-    s_new_key   <= new_key;
-    s_enc_dec   <= enc_dec;
-    s_input_rdy <= input_rdy;
+    s_key_rdy   <= key_rdy;
+    
+    data_acq    <= s_data_acq;
+    key_acq     <= s_key_acq;
     data_out    <= s_data_from(64 to 127) & s_data_from(0 to 63);
+    output_rdy  <= s_output_rdy;
 
 end RTL;
