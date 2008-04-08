@@ -25,4 +25,4 @@ add wave -divider "fl2"
 add wave -HEX -ports /uut/fl2/*
 add wave -divider "six3"
 add wave -HEX -ports /uut/six3/*
-run 1000 ns
+run 150 ns

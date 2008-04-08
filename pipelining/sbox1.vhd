@@ -1,1106 +1,140 @@
-
 --------------------------------------------------------------------------------
--- Designer:      Paolo Fulgoni <pfulgoni@opencores.org>
---
--- Create Date:   09/14/2007
--- Last Update:   10/15/2007
--- Project Name:  camellia-vhdl
--- Description:   Dual-port SBOX1
---
--- Copyright (C) 2007  Paolo Fulgoni
--- This file is part of camellia-vhdl.
--- camellia-vhdl is free software; you can redistribute it and/or modify
--- it under the terms of the GNU General Public License as published by
--- the Free Software Foundation; either version 3 of the License, or
--- (at your option) any later version.
--- camellia-vhdl is distributed in the hope that it will be useful,
--- but WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
--- GNU General Public License for more details.
--- You should have received a copy of the GNU General Public License
--- along with this program.  If not, see <http://www.gnu.org/licenses/>.
---
--- The Camellia cipher algorithm is 128 bit cipher developed by NTT and
--- Mitsubishi Electric researchers.
--- http://info.isl.ntt.co.jp/crypt/eng/camellia/
+--     This file is owned and controlled by Xilinx and must be used           --
+--     solely for design, simulation, implementation and creation of          --
+--     design files limited to Xilinx devices or technologies. Use            --
+--     with non-Xilinx devices or technologies is expressly prohibited        --
+--     and immediately terminates your license.                               --
+--                                                                            --
+--     XILINX IS PROVIDING THIS DESIGN, CODE, OR INFORMATION "AS IS"          --
+--     SOLELY FOR USE IN DEVELOPING PROGRAMS AND SOLUTIONS FOR                --
+--     XILINX DEVICES.  BY PROVIDING THIS DESIGN, CODE, OR INFORMATION        --
+--     AS ONE POSSIBLE IMPLEMENTATION OF THIS FEATURE, APPLICATION            --
+--     OR STANDARD, XILINX IS MAKING NO REPRESENTATION THAT THIS              --
+--     IMPLEMENTATION IS FREE FROM ANY CLAIMS OF INFRINGEMENT,                --
+--     AND YOU ARE RESPONSIBLE FOR OBTAINING ANY RIGHTS YOU MAY REQUIRE       --
+--     FOR YOUR IMPLEMENTATION.  XILINX EXPRESSLY DISCLAIMS ANY               --
+--     WARRANTY WHATSOEVER WITH RESPECT TO THE ADEQUACY OF THE                --
+--     IMPLEMENTATION, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OR         --
+--     REPRESENTATIONS THAT THIS IMPLEMENTATION IS FREE FROM CLAIMS OF        --
+--     INFRINGEMENT, IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS        --
+--     FOR A PARTICULAR PURPOSE.                                              --
+--                                                                            --
+--     Xilinx products are not intended for use in life support               --
+--     appliances, devices, or systems. Use in such applications are          --
+--     expressly prohibited.                                                  --
+--                                                                            --
+--     (c) Copyright 1995-2007 Xilinx, Inc.                                   --
+--     All rights reserved.                                                   --
 --------------------------------------------------------------------------------
-library IEEE;
-use IEEE.STD_LOGIC_1164.all;
+-- You must compile the wrapper file sbox1.vhd when simulating
+-- the core, sbox1. When compiling the wrapper file, be sure to
+-- reference the XilinxCoreLib VHDL simulation library. For detailed
+-- instructions, please refer to the "CORE Generator Help".
 
+-- The synthesis directives "translate_off/translate_on" specified
+-- below are supported by Xilinx, Mentor Graphics and Synplicity
+-- synthesis tools. Ensure they are correct for your synthesis tool(s).
 
-entity SBOX1 is
-    port  (
-            addra : IN STD_LOGIC_VECTOR(0 to 7);
-            addrb : IN STD_LOGIC_VECTOR(0 to 7);
-            clka  : IN STD_LOGIC;
-            clkb  : IN STD_LOGIC;
-            douta : OUT STD_LOGIC_VECTOR(0 to 7);
-            doutb : OUT STD_LOGIC_VECTOR(0 to 7);
-            ena   : IN STD_LOGIC;
-            enb   : IN STD_LOGIC
-            );
-end SBOX1;
+LIBRARY ieee;
+USE ieee.std_logic_1164.ALL;
+-- synthesis translate_off
+Library XilinxCoreLib;
+-- synthesis translate_on
+ENTITY sbox1 IS
+	port (
+	addra: IN std_logic_VECTOR(7 downto 0);
+	addrb: IN std_logic_VECTOR(7 downto 0);
+	clka: IN std_logic;
+	clkb: IN std_logic;
+	douta: OUT std_logic_VECTOR(7 downto 0);
+	doutb: OUT std_logic_VECTOR(7 downto 0);
+	ena: IN std_logic;
+	enb: IN std_logic);
+END sbox1;
 
-architecture RTL of SBOX1 is
-begin
+ARCHITECTURE sbox1_a OF sbox1 IS
+-- synthesis translate_off
+component wrapped_sbox1
+	port (
+	addra: IN std_logic_VECTOR(7 downto 0);
+	addrb: IN std_logic_VECTOR(7 downto 0);
+	clka: IN std_logic;
+	clkb: IN std_logic;
+	douta: OUT std_logic_VECTOR(7 downto 0);
+	doutb: OUT std_logic_VECTOR(7 downto 0);
+	ena: IN std_logic;
+	enb: IN std_logic);
+end component;
 
-    CHA : process(ena, clka)
-    begin
+-- Configuration specification 
+	for all : wrapped_sbox1 use entity XilinxCoreLib.blkmemdp_v6_3(behavioral)
+		generic map(
+			c_reg_inputsb => 0,
+			c_reg_inputsa => 0,
+			c_has_ndb => 0,
+			c_has_nda => 0,
+			c_ytop_addr => "1024",
+			c_has_rfdb => 0,
+			c_has_rfda => 0,
+			c_ywea_is_high => 1,
+			c_yena_is_high => 1,
+			c_yclka_is_rising => 1,
+			c_yhierarchy => "hierarchy1",
+			c_ysinita_is_high => 1,
+			c_ybottom_addr => "0",
+			c_width_b => 8,
+			c_width_a => 8,
+			c_sinita_value => "0",
+			c_sinitb_value => "0",
+			c_limit_data_pitch => 18,
+			c_write_modeb => 0,
+			c_write_modea => 0,
+			c_has_rdyb => 0,
+			c_yuse_single_primitive => 0,
+			c_has_rdya => 0,
+			c_addra_width => 8,
+			c_addrb_width => 8,
+			c_has_limit_data_pitch => 0,
+			c_default_data => "0",
+			c_pipe_stages_b => 0,
+			c_yweb_is_high => 1,
+			c_yenb_is_high => 1,
+			c_pipe_stages_a => 0,
+			c_yclkb_is_rising => 1,
+			c_yydisable_warnings => 1,
+			c_enable_rlocs => 0,
+			c_ysinitb_is_high => 1,
+			c_has_web => 0,
+			c_has_default_data => 0,
+			c_has_sinitb => 0,
+			c_has_wea => 0,
+			c_has_sinita => 0,
+			c_has_dinb => 0,
+			c_has_dina => 0,
+			c_ymake_bmm => 0,
+			c_sim_collision_check => "NONE",
+			c_has_enb => 1,
+			c_has_ena => 1,
+			c_mem_init_file => "sbox1.mif",
+			c_depth_b => 256,
+			c_depth_a => 256,
+			c_has_doutb => 1,
+			c_has_douta => 1,
+			c_yprimitive_type => "16kx1");
+-- synthesis translate_on
+BEGIN
+-- synthesis translate_off
+U0 : wrapped_sbox1
+		port map (
+			addra => addra,
+			addrb => addrb,
+			clka => clka,
+			clkb => clkb,
+			douta => douta,
+			doutb => doutb,
+			ena => ena,
+			enb => enb);
+-- synthesis translate_on
 
-        if (ena = '0') then
-            douta <= (others=>'0');
-        else
-            if (clka'event and clka = '1') then -- rising clock edge
-                case addra is
-                    when X"00" =>
-                        douta <= X"70";
-                    when X"01" =>
-                        douta <= X"82";
-                    when X"02" =>
-                        douta <= X"2C";
-                    when X"03" =>
-                        douta <= X"EC";
-                    when X"04" =>
-                        douta <= X"B3";
-                    when X"05" =>
-                        douta <= X"27";
-                    when X"06" =>
-                        douta <= X"C0";
-                    when X"07" =>
-                        douta <= X"E5";
-                    when X"08" =>
-                        douta <= X"E4";
-                    when X"09" =>
-                        douta <= X"85";
-                    when X"0A" =>
-                        douta <= X"57";
-                    when X"0B" =>
-                        douta <= X"35";
-                    when X"0C" =>
-                        douta <= X"EA";
-                    when X"0D" =>
-                        douta <= X"0C";
-                    when X"0E" =>
-                        douta <= X"AE";
-                    when X"0F" =>
-                        douta <= X"41";
-                    when X"10" =>
-                        douta <= X"23";
-                    when X"11" =>
-                        douta <= X"EF";
-                    when X"12" =>
-                        douta <= X"6B";
-                    when X"13" =>
-                        douta <= X"93";
-                    when X"14" =>
-                        douta <= X"45";
-                    when X"15" =>
-                        douta <= X"19";
-                    when X"16" =>
-                        douta <= X"A5";
-                    when X"17" =>
-                        douta <= X"21";
-                    when X"18" =>
-                        douta <= X"ED";
-                    when X"19" =>
-                        douta <= X"0E";
-                    when X"1A" =>
-                        douta <= X"4F";
-                    when X"1B" =>
-                        douta <= X"4E";
-                    when X"1C" =>
-                        douta <= X"1D";
-                    when X"1D" =>
-                        douta <= X"65";
-                    when X"1E" =>
-                        douta <= X"92";
-                    when X"1F" =>
-                        douta <= X"BD";
-                    when X"20" =>
-                        douta <= X"86";
-                    when X"21" =>
-                        douta <= X"B8";
-                    when X"22" =>
-                        douta <= X"AF";
-                    when X"23" =>
-                        douta <= X"8F";
-                    when X"24" =>
-                        douta <= X"7C";
-                    when X"25" =>
-                        douta <= X"EB";
-                    when X"26" =>
-                        douta <= X"1F";
-                    when X"27" =>
-                        douta <= X"CE";
-                    when X"28" =>
-                        douta <= X"3E";
-                    when X"29" =>
-                        douta <= X"30";
-                    when X"2A" =>
-                        douta <= X"DC";
-                    when X"2B" =>
-                        douta <= X"5F";
-                    when X"2C" =>
-                        douta <= X"5E";
-                    when X"2D" =>
-                        douta <= X"C5";
-                    when X"2E" =>
-                        douta <= X"0B";
-                    when X"2F" =>
-                        douta <= X"1A";
-                    when X"30" =>
-                        douta <= X"A6";
-                    when X"31" =>
-                        douta <= X"E1";
-                    when X"32" =>
-                        douta <= X"39";
-                    when X"33" =>
-                        douta <= X"CA";
-                    when X"34" =>
-                        douta <= X"D5";
-                    when X"35" =>
-                        douta <= X"47";
-                    when X"36" =>
-                        douta <= X"5D";
-                    when X"37" =>
-                        douta <= X"3D";
-                    when X"38" =>
-                        douta <= X"D9";
-                    when X"39" =>
-                        douta <= X"01";
-                    when X"3A" =>
-                        douta <= X"5A";
-                    when X"3B" =>
-                        douta <= X"D6";
-                    when X"3C" =>
-                        douta <= X"51";
-                    when X"3D" =>
-                        douta <= X"56";
-                    when X"3E" =>
-                        douta <= X"6C";
-                    when X"3F" =>
-                        douta <= X"4D";
-                    when X"40" =>
-                        douta <= X"8B";
-                    when X"41" =>
-                        douta <= X"0D";
-                    when X"42" =>
-                        douta <= X"9A";
-                    when X"43" =>
-                        douta <= X"66";
-                    when X"44" =>
-                        douta <= X"FB";
-                    when X"45" =>
-                        douta <= X"CC";
-                    when X"46" =>
-                        douta <= X"B0";
-                    when X"47" =>
-                        douta <= X"2D";
-                    when X"48" =>
-                        douta <= X"74";
-                    when X"49" =>
-                        douta <= X"12";
-                    when X"4A" =>
-                        douta <= X"2B";
-                    when X"4B" =>
-                        douta <= X"20";
-                    when X"4C" =>
-                        douta <= X"F0";
-                    when X"4D" =>
-                        douta <= X"B1";
-                    when X"4E" =>
-                        douta <= X"84";
-                    when X"4F" =>
-                        douta <= X"99";
-                    when X"50" =>
-                        douta <= X"DF";
-                    when X"51" =>
-                        douta <= X"4C";
-                    when X"52" =>
-                        douta <= X"CB";
-                    when X"53" =>
-                        douta <= X"C2";
-                    when X"54" =>
-                        douta <= X"34";
-                    when X"55" =>
-                        douta <= X"7E";
-                    when X"56" =>
-                        douta <= X"76";
-                    when X"57" =>
-                        douta <= X"05";
-                    when X"58" =>
-                        douta <= X"6D";
-                    when X"59" =>
-                        douta <= X"B7";
-                    when X"5A" =>
-                        douta <= X"A9";
-                    when X"5B" =>
-                        douta <= X"31";
-                    when X"5C" =>
-                        douta <= X"D1";
-                    when X"5D" =>
-                        douta <= X"17";
-                    when X"5E" =>
-                        douta <= X"04";
-                    when X"5F" =>
-                        douta <= X"D7";
-                    when X"60" =>
-                        douta <= X"14";
-                    when X"61" =>
-                        douta <= X"58";
-                    when X"62" =>
-                        douta <= X"3A";
-                    when X"63" =>
-                        douta <= X"61";
-                    when X"64" =>
-                        douta <= X"DE";
-                    when X"65" =>
-                        douta <= X"1B";
-                    when X"66" =>
-                        douta <= X"11";
-                    when X"67" =>
-                        douta <= X"1C";
-                    when X"68" =>
-                        douta <= X"32";
-                    when X"69" =>
-                        douta <= X"0F";
-                    when X"6A" =>
-                        douta <= X"9C";
-                    when X"6B" =>
-                        douta <= X"16";
-                    when X"6C" =>
-                        douta <= X"53";
-                    when X"6D" =>
-                        douta <= X"18";
-                    when X"6E" =>
-                        douta <= X"F2";
-                    when X"6F" =>
-                        douta <= X"22";
-                    when X"70" =>
-                        douta <= X"FE";
-                    when X"71" =>
-                        douta <= X"44";
-                    when X"72" =>
-                        douta <= X"CF";
-                    when X"73" =>
-                        douta <= X"B2";
-                    when X"74" =>
-                        douta <= X"C3";
-                    when X"75" =>
-                        douta <= X"B5";
-                    when X"76" =>
-                        douta <= X"7A";
-                    when X"77" =>
-                        douta <= X"91";
-                    when X"78" =>
-                        douta <= X"24";
-                    when X"79" =>
-                        douta <= X"08";
-                    when X"7A" =>
-                        douta <= X"E8";
-                    when X"7B" =>
-                        douta <= X"A8";
-                    when X"7C" =>
-                        douta <= X"60";
-                    when X"7D" =>
-                        douta <= X"FC";
-                    when X"7E" =>
-                        douta <= X"69";
-                    when X"7F" =>
-                        douta <= X"50";
-                    when X"80" =>
-                        douta <= X"AA";
-                    when X"81" =>
-                        douta <= X"D0";
-                    when X"82" =>
-                        douta <= X"A0";
-                    when X"83" =>
-                        douta <= X"7D";
-                    when X"84" =>
-                        douta <= X"A1";
-                    when X"85" =>
-                        douta <= X"89";
-                    when X"86" =>
-                        douta <= X"62";
-                    when X"87" =>
-                        douta <= X"97";
-                    when X"88" =>
-                        douta <= X"54";
-                    when X"89" =>
-                        douta <= X"5B";
-                    when X"8A" =>
-                        douta <= X"1E";
-                    when X"8B" =>
-                        douta <= X"95";
-                    when X"8C" =>
-                        douta <= X"E0";
-                    when X"8D" =>
-                        douta <= X"FF";
-                    when X"8E" =>
-                        douta <= X"64";
-                    when X"8F" =>
-                        douta <= X"D2";
-                    when X"90" =>
-                        douta <= X"10";
-                    when X"91" =>
-                        douta <= X"C4";
-                    when X"92" =>
-                        douta <= X"00";
-                    when X"93" =>
-                        douta <= X"48";
-                    when X"94" =>
-                        douta <= X"A3";
-                    when X"95" =>
-                        douta <= X"F7";
-                    when X"96" =>
-                        douta <= X"75";
-                    when X"97" =>
-                        douta <= X"DB";
-                    when X"98" =>
-                        douta <= X"8A";
-                    when X"99" =>
-                        douta <= X"03";
-                    when X"9A" =>
-                        douta <= X"E6";
-                    when X"9B" =>
-                        douta <= X"DA";
-                    when X"9C" =>
-                        douta <= X"09";
-                    when X"9D" =>
-                        douta <= X"3F";
-                    when X"9E" =>
-                        douta <= X"DD";
-                    when X"9F" =>
-                        douta <= X"94";
-                    when X"A0" =>
-                        douta <= X"87";
-                    when X"A1" =>
-                        douta <= X"5C";
-                    when X"A2" =>
-                        douta <= X"83";
-                    when X"A3" =>
-                        douta <= X"02";
-                    when X"A4" =>
-                        douta <= X"CD";
-                    when X"A5" =>
-                        douta <= X"4A";
-                    when X"A6" =>
-                        douta <= X"90";
-                    when X"A7" =>
-                        douta <= X"33";
-                    when X"A8" =>
-                        douta <= X"73";
-                    when X"A9" =>
-                        douta <= X"67";
-                    when X"AA" =>
-                        douta <= X"F6";
-                    when X"AB" =>
-                        douta <= X"F3";
-                    when X"AC" =>
-                        douta <= X"9D";
-                    when X"AD" =>
-                        douta <= X"7F";
-                    when X"AE" =>
-                        douta <= X"BF";
-                    when X"AF" =>
-                        douta <= X"E2";
-                    when X"B0" =>
-                        douta <= X"52";
-                    when X"B1" =>
-                        douta <= X"9B";
-                    when X"B2" =>
-                        douta <= X"D8";
-                    when X"B3" =>
-                        douta <= X"26";
-                    when X"B4" =>
-                        douta <= X"C8";
-                    when X"B5" =>
-                        douta <= X"37";
-                    when X"B6" =>
-                        douta <= X"C6";
-                    when X"B7" =>
-                        douta <= X"3B";
-                    when X"B8" =>
-                        douta <= X"81";
-                    when X"B9" =>
-                        douta <= X"96";
-                    when X"BA" =>
-                        douta <= X"6F";
-                    when X"BB" =>
-                        douta <= X"4B";
-                    when X"BC" =>
-                        douta <= X"13";
-                    when X"BD" =>
-                        douta <= X"BE";
-                    when X"BE" =>
-                        douta <= X"63";
-                    when X"BF" =>
-                        douta <= X"2E";
-                    when X"C0" =>
-                        douta <= X"E9";
-                    when X"C1" =>
-                        douta <= X"79";
-                    when X"C2" =>
-                        douta <= X"A7";
-                    when X"C3" =>
-                        douta <= X"8C";
-                    when X"C4" =>
-                        douta <= X"9F";
-                    when X"C5" =>
-                        douta <= X"6E";
-                    when X"C6" =>
-                        douta <= X"BC";
-                    when X"C7" =>
-                        douta <= X"8E";
-                    when X"C8" =>
-                        douta <= X"29";
-                    when X"C9" =>
-                        douta <= X"F5";
-                    when X"CA" =>
-                        douta <= X"F9";
-                    when X"CB" =>
-                        douta <= X"B6";
-                    when X"CC" =>
-                        douta <= X"2F";
-                    when X"CD" =>
-                        douta <= X"FD";
-                    when X"CE" =>
-                        douta <= X"B4";
-                    when X"CF" =>
-                        douta <= X"59";
-                    when X"D0" =>
-                        douta <= X"78";
-                    when X"D1" =>
-                        douta <= X"98";
-                    when X"D2" =>
-                        douta <= X"06";
-                    when X"D3" =>
-                        douta <= X"6A";
-                    when X"D4" =>
-                        douta <= X"E7";
-                    when X"D5" =>
-                        douta <= X"46";
-                    when X"D6" =>
-                        douta <= X"71";
-                    when X"D7" =>
-                        douta <= X"BA";
-                    when X"D8" =>
-                        douta <= X"D4";
-                    when X"D9" =>
-                        douta <= X"25";
-                    when X"DA" =>
-                        douta <= X"AB";
-                    when X"DB" =>
-                        douta <= X"42";
-                    when X"DC" =>
-                        douta <= X"88";
-                    when X"DD" =>
-                        douta <= X"A2";
-                    when X"DE" =>
-                        douta <= X"8D";
-                    when X"DF" =>
-                        douta <= X"FA";
-                    when X"E0" =>
-                        douta <= X"72";
-                    when X"E1" =>
-                        douta <= X"07";
-                    when X"E2" =>
-                        douta <= X"B9";
-                    when X"E3" =>
-                        douta <= X"55";
-                    when X"E4" =>
-                        douta <= X"F8";
-                    when X"E5" =>
-                        douta <= X"EE";
-                    when X"E6" =>
-                        douta <= X"AC";
-                    when X"E7" =>
-                        douta <= X"0A";
-                    when X"E8" =>
-                        douta <= X"36";
-                    when X"E9" =>
-                        douta <= X"49";
-                    when X"EA" =>
-                        douta <= X"2A";
-                    when X"EB" =>
-                        douta <= X"68";
-                    when X"EC" =>
-                        douta <= X"3C";
-                    when X"ED" =>
-                        douta <= X"38";
-                    when X"EE" =>
-                        douta <= X"F1";
-                    when X"EF" =>
-                        douta <= X"A4";
-                    when X"F0" =>
-                        douta <= X"40";
-                    when X"F1" =>
-                        douta <= X"28";
-                    when X"F2" =>
-                        douta <= X"D3";
-                    when X"F3" =>
-                        douta <= X"7B";
-                    when X"F4" =>
-                        douta <= X"BB";
-                    when X"F5" =>
-                        douta <= X"C9";
-                    when X"F6" =>
-                        douta <= X"43";
-                    when X"F7" =>
-                        douta <= X"C1";
-                    when X"F8" =>
-                        douta <= X"15";
-                    when X"F9" =>
-                        douta <= X"E3";
-                    when X"FA" =>
-                        douta <= X"AD";
-                    when X"FB" =>
-                        douta <= X"F4";
-                    when X"FC" =>
-                        douta <= X"77";
-                    when X"FD" =>
-                        douta <= X"C7";
-                    when X"FE" =>
-                        douta <= X"80";
-                    when X"FF" =>
-                        douta <= X"9E";
-                    when others =>
-                        douta <= (others=>'-');
-                end case;
-            end if;
-        end if;
+END sbox1_a;
 
-    end process;
-
-
-
-    CHB : process(enb, clkb)
-    begin
-
-        if (enb = '0') then
-            doutb <= (others=>'0');
-        else
-            if (clkb'event and clkb = '1') then -- rising clock edge
-                case addrb is
-                    when X"00" =>
-                        doutb <= X"70";
-                    when X"01" =>
-                        doutb <= X"82";
-                    when X"02" =>
-                        doutb <= X"2C";
-                    when X"03" =>
-                        doutb <= X"EC";
-                    when X"04" =>
-                        doutb <= X"B3";
-                    when X"05" =>
-                        doutb <= X"27";
-                    when X"06" =>
-                        doutb <= X"C0";
-                    when X"07" =>
-                        doutb <= X"E5";
-                    when X"08" =>
-                        doutb <= X"E4";
-                    when X"09" =>
-                        doutb <= X"85";
-                    when X"0A" =>
-                        doutb <= X"57";
-                    when X"0B" =>
-                        doutb <= X"35";
-                    when X"0C" =>
-                        doutb <= X"EA";
-                    when X"0D" =>
-                        doutb <= X"0C";
-                    when X"0E" =>
-                        doutb <= X"AE";
-                    when X"0F" =>
-                        doutb <= X"41";
-                    when X"10" =>
-                        doutb <= X"23";
-                    when X"11" =>
-                        doutb <= X"EF";
-                    when X"12" =>
-                        doutb <= X"6B";
-                    when X"13" =>
-                        doutb <= X"93";
-                    when X"14" =>
-                        doutb <= X"45";
-                    when X"15" =>
-                        doutb <= X"19";
-                    when X"16" =>
-                        doutb <= X"A5";
-                    when X"17" =>
-                        doutb <= X"21";
-                    when X"18" =>
-                        doutb <= X"ED";
-                    when X"19" =>
-                        doutb <= X"0E";
-                    when X"1A" =>
-                        doutb <= X"4F";
-                    when X"1B" =>
-                        doutb <= X"4E";
-                    when X"1C" =>
-                        doutb <= X"1D";
-                    when X"1D" =>
-                        doutb <= X"65";
-                    when X"1E" =>
-                        doutb <= X"92";
-                    when X"1F" =>
-                        doutb <= X"BD";
-                    when X"20" =>
-                        doutb <= X"86";
-                    when X"21" =>
-                        doutb <= X"B8";
-                    when X"22" =>
-                        doutb <= X"AF";
-                    when X"23" =>
-                        doutb <= X"8F";
-                    when X"24" =>
-                        doutb <= X"7C";
-                    when X"25" =>
-                        doutb <= X"EB";
-                    when X"26" =>
-                        doutb <= X"1F";
-                    when X"27" =>
-                        doutb <= X"CE";
-                    when X"28" =>
-                        doutb <= X"3E";
-                    when X"29" =>
-                        doutb <= X"30";
-                    when X"2A" =>
-                        doutb <= X"DC";
-                    when X"2B" =>
-                        doutb <= X"5F";
-                    when X"2C" =>
-                        doutb <= X"5E";
-                    when X"2D" =>
-                        doutb <= X"C5";
-                    when X"2E" =>
-                        doutb <= X"0B";
-                    when X"2F" =>
-                        doutb <= X"1A";
-                    when X"30" =>
-                        doutb <= X"A6";
-                    when X"31" =>
-                        doutb <= X"E1";
-                    when X"32" =>
-                        doutb <= X"39";
-                    when X"33" =>
-                        doutb <= X"CA";
-                    when X"34" =>
-                        doutb <= X"D5";
-                    when X"35" =>
-                        doutb <= X"47";
-                    when X"36" =>
-                        doutb <= X"5D";
-                    when X"37" =>
-                        doutb <= X"3D";
-                    when X"38" =>
-                        doutb <= X"D9";
-                    when X"39" =>
-                        doutb <= X"01";
-                    when X"3A" =>
-                        doutb <= X"5A";
-                    when X"3B" =>
-                        doutb <= X"D6";
-                    when X"3C" =>
-                        doutb <= X"51";
-                    when X"3D" =>
-                        doutb <= X"56";
-                    when X"3E" =>
-                        doutb <= X"6C";
-                    when X"3F" =>
-                        doutb <= X"4D";
-                    when X"40" =>
-                        doutb <= X"8B";
-                    when X"41" =>
-                        doutb <= X"0D";
-                    when X"42" =>
-                        doutb <= X"9A";
-                    when X"43" =>
-                        doutb <= X"66";
-                    when X"44" =>
-                        doutb <= X"FB";
-                    when X"45" =>
-                        doutb <= X"CC";
-                    when X"46" =>
-                        doutb <= X"B0";
-                    when X"47" =>
-                        doutb <= X"2D";
-                    when X"48" =>
-                        doutb <= X"74";
-                    when X"49" =>
-                        doutb <= X"12";
-                    when X"4A" =>
-                        doutb <= X"2B";
-                    when X"4B" =>
-                        doutb <= X"20";
-                    when X"4C" =>
-                        doutb <= X"F0";
-                    when X"4D" =>
-                        doutb <= X"B1";
-                    when X"4E" =>
-                        doutb <= X"84";
-                    when X"4F" =>
-                        doutb <= X"99";
-                    when X"50" =>
-                        doutb <= X"DF";
-                    when X"51" =>
-                        doutb <= X"4C";
-                    when X"52" =>
-                        doutb <= X"CB";
-                    when X"53" =>
-                        doutb <= X"C2";
-                    when X"54" =>
-                        doutb <= X"34";
-                    when X"55" =>
-                        doutb <= X"7E";
-                    when X"56" =>
-                        doutb <= X"76";
-                    when X"57" =>
-                        doutb <= X"05";
-                    when X"58" =>
-                        doutb <= X"6D";
-                    when X"59" =>
-                        doutb <= X"B7";
-                    when X"5A" =>
-                        doutb <= X"A9";
-                    when X"5B" =>
-                        doutb <= X"31";
-                    when X"5C" =>
-                        doutb <= X"D1";
-                    when X"5D" =>
-                        doutb <= X"17";
-                    when X"5E" =>
-                        doutb <= X"04";
-                    when X"5F" =>
-                        doutb <= X"D7";
-                    when X"60" =>
-                        doutb <= X"14";
-                    when X"61" =>
-                        doutb <= X"58";
-                    when X"62" =>
-                        doutb <= X"3A";
-                    when X"63" =>
-                        doutb <= X"61";
-                    when X"64" =>
-                        doutb <= X"DE";
-                    when X"65" =>
-                        doutb <= X"1B";
-                    when X"66" =>
-                        doutb <= X"11";
-                    when X"67" =>
-                        doutb <= X"1C";
-                    when X"68" =>
-                        doutb <= X"32";
-                    when X"69" =>
-                        doutb <= X"0F";
-                    when X"6A" =>
-                        doutb <= X"9C";
-                    when X"6B" =>
-                        doutb <= X"16";
-                    when X"6C" =>
-                        doutb <= X"53";
-                    when X"6D" =>
-                        doutb <= X"18";
-                    when X"6E" =>
-                        doutb <= X"F2";
-                    when X"6F" =>
-                        doutb <= X"22";
-                    when X"70" =>
-                        doutb <= X"FE";
-                    when X"71" =>
-                        doutb <= X"44";
-                    when X"72" =>
-                        doutb <= X"CF";
-                    when X"73" =>
-                        doutb <= X"B2";
-                    when X"74" =>
-                        doutb <= X"C3";
-                    when X"75" =>
-                        doutb <= X"B5";
-                    when X"76" =>
-                        doutb <= X"7A";
-                    when X"77" =>
-                        doutb <= X"91";
-                    when X"78" =>
-                        doutb <= X"24";
-                    when X"79" =>
-                        doutb <= X"08";
-                    when X"7A" =>
-                        doutb <= X"E8";
-                    when X"7B" =>
-                        doutb <= X"A8";
-                    when X"7C" =>
-                        doutb <= X"60";
-                    when X"7D" =>
-                        doutb <= X"FC";
-                    when X"7E" =>
-                        doutb <= X"69";
-                    when X"7F" =>
-                        doutb <= X"50";
-                    when X"80" =>
-                        doutb <= X"AA";
-                    when X"81" =>
-                        doutb <= X"D0";
-                    when X"82" =>
-                        doutb <= X"A0";
-                    when X"83" =>
-                        doutb <= X"7D";
-                    when X"84" =>
-                        doutb <= X"A1";
-                    when X"85" =>
-                        doutb <= X"89";
-                    when X"86" =>
-                        doutb <= X"62";
-                    when X"87" =>
-                        doutb <= X"97";
-                    when X"88" =>
-                        doutb <= X"54";
-                    when X"89" =>
-                        doutb <= X"5B";
-                    when X"8A" =>
-                        doutb <= X"1E";
-                    when X"8B" =>
-                        doutb <= X"95";
-                    when X"8C" =>
-                        doutb <= X"E0";
-                    when X"8D" =>
-                        doutb <= X"FF";
-                    when X"8E" =>
-                        doutb <= X"64";
-                    when X"8F" =>
-                        doutb <= X"D2";
-                    when X"90" =>
-                        doutb <= X"10";
-                    when X"91" =>
-                        doutb <= X"C4";
-                    when X"92" =>
-                        doutb <= X"00";
-                    when X"93" =>
-                        doutb <= X"48";
-                    when X"94" =>
-                        doutb <= X"A3";
-                    when X"95" =>
-                        doutb <= X"F7";
-                    when X"96" =>
-                        doutb <= X"75";
-                    when X"97" =>
-                        doutb <= X"DB";
-                    when X"98" =>
-                        doutb <= X"8A";
-                    when X"99" =>
-                        doutb <= X"03";
-                    when X"9A" =>
-                        doutb <= X"E6";
-                    when X"9B" =>
-                        doutb <= X"DA";
-                    when X"9C" =>
-                        doutb <= X"09";
-                    when X"9D" =>
-                        doutb <= X"3F";
-                    when X"9E" =>
-                        doutb <= X"DD";
-                    when X"9F" =>
-                        doutb <= X"94";
-                    when X"A0" =>
-                        doutb <= X"87";
-                    when X"A1" =>
-                        doutb <= X"5C";
-                    when X"A2" =>
-                        doutb <= X"83";
-                    when X"A3" =>
-                        doutb <= X"02";
-                    when X"A4" =>
-                        doutb <= X"CD";
-                    when X"A5" =>
-                        doutb <= X"4A";
-                    when X"A6" =>
-                        doutb <= X"90";
-                    when X"A7" =>
-                        doutb <= X"33";
-                    when X"A8" =>
-                        doutb <= X"73";
-                    when X"A9" =>
-                        doutb <= X"67";
-                    when X"AA" =>
-                        doutb <= X"F6";
-                    when X"AB" =>
-                        doutb <= X"F3";
-                    when X"AC" =>
-                        doutb <= X"9D";
-                    when X"AD" =>
-                        doutb <= X"7F";
-                    when X"AE" =>
-                        doutb <= X"BF";
-                    when X"AF" =>
-                        doutb <= X"E2";
-                    when X"B0" =>
-                        doutb <= X"52";
-                    when X"B1" =>
-                        doutb <= X"9B";
-                    when X"B2" =>
-                        doutb <= X"D8";
-                    when X"B3" =>
-                        doutb <= X"26";
-                    when X"B4" =>
-                        doutb <= X"C8";
-                    when X"B5" =>
-                        doutb <= X"37";
-                    when X"B6" =>
-                        doutb <= X"C6";
-                    when X"B7" =>
-                        doutb <= X"3B";
-                    when X"B8" =>
-                        doutb <= X"81";
-                    when X"B9" =>
-                        doutb <= X"96";
-                    when X"BA" =>
-                        doutb <= X"6F";
-                    when X"BB" =>
-                        doutb <= X"4B";
-                    when X"BC" =>
-                        doutb <= X"13";
-                    when X"BD" =>
-                        doutb <= X"BE";
-                    when X"BE" =>
-                        doutb <= X"63";
-                    when X"BF" =>
-                        doutb <= X"2E";
-                    when X"C0" =>
-                        doutb <= X"E9";
-                    when X"C1" =>
-                        doutb <= X"79";
-                    when X"C2" =>
-                        doutb <= X"A7";
-                    when X"C3" =>
-                        doutb <= X"8C";
-                    when X"C4" =>
-                        doutb <= X"9F";
-                    when X"C5" =>
-                        doutb <= X"6E";
-                    when X"C6" =>
-                        doutb <= X"BC";
-                    when X"C7" =>
-                        doutb <= X"8E";
-                    when X"C8" =>
-                        doutb <= X"29";
-                    when X"C9" =>
-                        doutb <= X"F5";
-                    when X"CA" =>
-                        doutb <= X"F9";
-                    when X"CB" =>
-                        doutb <= X"B6";
-                    when X"CC" =>
-                        doutb <= X"2F";
-                    when X"CD" =>
-                        doutb <= X"FD";
-                    when X"CE" =>
-                        doutb <= X"B4";
-                    when X"CF" =>
-                        doutb <= X"59";
-                    when X"D0" =>
-                        doutb <= X"78";
-                    when X"D1" =>
-                        doutb <= X"98";
-                    when X"D2" =>
-                        doutb <= X"06";
-                    when X"D3" =>
-                        doutb <= X"6A";
-                    when X"D4" =>
-                        doutb <= X"E7";
-                    when X"D5" =>
-                        doutb <= X"46";
-                    when X"D6" =>
-                        doutb <= X"71";
-                    when X"D7" =>
-                        doutb <= X"BA";
-                    when X"D8" =>
-                        doutb <= X"D4";
-                    when X"D9" =>
-                        doutb <= X"25";
-                    when X"DA" =>
-                        doutb <= X"AB";
-                    when X"DB" =>
-                        doutb <= X"42";
-                    when X"DC" =>
-                        doutb <= X"88";
-                    when X"DD" =>
-                        doutb <= X"A2";
-                    when X"DE" =>
-                        doutb <= X"8D";
-                    when X"DF" =>
-                        doutb <= X"FA";
-                    when X"E0" =>
-                        doutb <= X"72";
-                    when X"E1" =>
-                        doutb <= X"07";
-                    when X"E2" =>
-                        doutb <= X"B9";
-                    when X"E3" =>
-                        doutb <= X"55";
-                    when X"E4" =>
-                        doutb <= X"F8";
-                    when X"E5" =>
-                        doutb <= X"EE";
-                    when X"E6" =>
-                        doutb <= X"AC";
-                    when X"E7" =>
-                        doutb <= X"0A";
-                    when X"E8" =>
-                        doutb <= X"36";
-                    when X"E9" =>
-                        doutb <= X"49";
-                    when X"EA" =>
-                        doutb <= X"2A";
-                    when X"EB" =>
-                        doutb <= X"68";
-                    when X"EC" =>
-                        doutb <= X"3C";
-                    when X"ED" =>
-                        doutb <= X"38";
-                    when X"EE" =>
-                        doutb <= X"F1";
-                    when X"EF" =>
-                        doutb <= X"A4";
-                    when X"F0" =>
-                        doutb <= X"40";
-                    when X"F1" =>
-                        doutb <= X"28";
-                    when X"F2" =>
-                        doutb <= X"D3";
-                    when X"F3" =>
-                        doutb <= X"7B";
-                    when X"F4" =>
-                        doutb <= X"BB";
-                    when X"F5" =>
-                        doutb <= X"C9";
-                    when X"F6" =>
-                        doutb <= X"43";
-                    when X"F7" =>
-                        doutb <= X"C1";
-                    when X"F8" =>
-                        doutb <= X"15";
-                    when X"F9" =>
-                        doutb <= X"E3";
-                    when X"FA" =>
-                        doutb <= X"AD";
-                    when X"FB" =>
-                        doutb <= X"F4";
-                    when X"FC" =>
-                        doutb <= X"77";
-                    when X"FD" =>
-                        doutb <= X"C7";
-                    when X"FE" =>
-                        doutb <= X"80";
-                    when X"FF" =>
-                        doutb <= X"9E";
-                    when others =>
-                        doutb <= (others=>'-');
-                end case;
-            end if;
-        end if;
-
-    end process;
-
-
-end RTL;

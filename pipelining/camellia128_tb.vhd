@@ -55,8 +55,7 @@ ARCHITECTURE behavior of camellia128_tb is
     signal c     : STD_LOGIC_VECTOR(0 to 127);
 
     -- Time constants
-    constant ClockPeriod : TIME := 30 ns;
-    constant InitReset   : TIME := 20 ns;
+    constant ClockPeriod : TIME := 5 ns;
 
     -- Misc
     signal clk_count : INTEGER range 0 to 30;
@@ -86,26 +85,27 @@ begin
     begin
         reset <= '1';
         clk_count <= 0;
-        wait for InitReset;
+        wait for ClockPeriod*2; --falling clock edge
         reset <= '0';
+        wait until clk = '1';
         m     <= X"0123456789ABCDEFFEDCBA9876543210";
         k     <= X"0123456789ABCDEFFEDCBA9876543210";
         dec   <= '0';
-        wait for ClockPeriod;
+        wait until clk = '1';
         m     <= X"17E02528D6655CEA7BE6B8548FC2DA65";
         k     <= X"FEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFE";
         dec   <= '1';
         clk_count <= clk_count + 1;
-        wait for ClockPeriod;
+        wait until clk = '1';
         m     <= X"67673138549669730857065648EABE43";
         k     <= X"0123456789ABCDEFFEDCBA9876543210";
         dec   <= '1';
         clk_count <= clk_count + 1;
         for I in 0 to 26 loop
-            wait for ClockPeriod;
+            wait until clk = '1';
             clk_count <= clk_count + 1;
         end loop;
-        reset <= '1';
+        
         wait;
     end process;
 
