@@ -44,6 +44,10 @@ entity camellia is
             
             data_out   : out STD_LOGIC_VECTOR (0 to 127);
             output_rdy : out STD_LOGIC
+            
+            -- post-synthesis debug
+            
+            
             );
 end camellia;
 

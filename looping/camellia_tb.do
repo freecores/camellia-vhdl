@@ -29,4 +29,4 @@ add wave -HEX /uut/CTRL/reg_enc_dec
 add wave -HEX /uut/CTRL/reg_k_len
 add wave -divider "datapath"
 add wave -HEX -ports /uut/DP/*
-run 1400 ns
+run 6 us

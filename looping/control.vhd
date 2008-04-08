@@ -56,8 +56,7 @@ end control;
 
 architecture RTL of control is
 
-    type STATUS is (RST,
-                    KEYa, KEYb, KEYc, KEYd, KEYe, KEYf,
+    type STATUS is (KEYa, KEYb, KEYc, KEYd, KEYe, KEYf,
                     SIX1a, SIX1b, SIX1c, SIX1d, SIX1e, SIX1f,
                     FL1,
                     SIX2a, SIX2b, SIX2c, SIX2d, SIX2e, SIX2f,
@@ -149,547 +148,557 @@ begin
                       reg_ka_s           when KA,
                       reg_kb_s           when KB,
                       (others=>'0')      when others;
+                      
 
-    REGISTERS_UPDATE : process(clk)
+    REGISTERS_UPDATE : process(reset, clk)
         variable coming_from_key : STD_LOGIC;
     begin
-    if (clk'event and clk = '1') then
-        case PS is
-            when RST =>
-                reg_kl           <= (others=>'0');
-                reg_kr           <= (others=>'0');
-                reg_ka           <= (others=>'0');
-                reg_kb           <= (others=>'0');
-                reg_kl_s         <= (others=>'0');
-                reg_kr_s         <= (others=>'0');
-                reg_ka_s         <= (others=>'0');
-                reg_kb_s         <= (others=>'0');
-                reg_enc_dec      <= '0';
-                reg_k_len        <= (others=>'0');
-                key_acq          <= '0';
-                data_acq         <= '0';
-                output_rdy       <= '0';
-                coming_from_key  := '0';
-            when KEYa =>
-                coming_from_key  := '1';
-                reg_kl           <= key_in(0 to 127);
-                reg_kl_s         <= key_in(0 to 127);
-                reg_k_len        <= k_len;
-                case k_len is
-                    when KLEN_192 =>
-                        reg_kr    <= key_in(128 to 191) & not (key_in(128 to 191));
-                        reg_kr_s  <= key_in(128 to 191) & not (key_in(128 to 191));
-                    when KLEN_256 =>
-                        reg_kr    <= key_in(128 to 255);
-                        reg_kr_s  <= key_in(128 to 255);
-                    when others =>
-                        reg_kr    <= (others=>'0');
-                        reg_kr_s  <= (others=>'0');
-                end case;
-                k1_sel    <= SIG1;
-            when KEYb =>
-                key_acq    <= '1';
-                k1_sel    <= SIG2;
-            when KEYc =>
-                key_acq    <= '0';
-                k1_sel    <= SIG3;
-            when KEYd =>
-                k1_sel    <= SIG4;
-            when KEYe =>
-                reg_ka    <= data_from;
-                reg_ka_s  <= data_from;
-                k1_sel    <= SIG5;
-            when KEYf =>
-                k1_sel    <= SIG6;
-            when SIX1a =>
-                if (enc_dec = ENC) then
-                    if (coming_from_key = '1') then
-                        if (reg_k_len = KLEN_128) then
-                            reg_ka   <= data_from;
-                            reg_ka_s <= data_from;
+    if (reset = '1') then
+        reg_kl           <= (others=>'0');
+        reg_kr           <= (others=>'0');
+        reg_ka           <= (others=>'0');
+        reg_kb           <= (others=>'0');
+        reg_kl_s         <= (others=>'0');
+        reg_kr_s         <= (others=>'0');
+        reg_ka_s         <= (others=>'0');
+        reg_kb_s         <= (others=>'0');
+        reg_enc_dec      <= '0';
+        reg_k_len        <= (others=>'0');
+        output_rdy       <= '0';
+        coming_from_key  := '0';
+    else
+        if (clk'event and clk = '1') then
+            case PS is
+                when KEYa =>
+                    coming_from_key  := '1';
+                    reg_kl           <= key_in(0 to 127);
+                    reg_kl_s         <= key_in(0 to 127);
+                    reg_k_len        <= k_len;
+                    case k_len is
+                        when KLEN_192 =>
+                            reg_kr    <= key_in(128 to 191) & not (key_in(128 to 191));
+                            reg_kr_s  <= key_in(128 to 191) & not (key_in(128 to 191));
+                        when KLEN_256 =>
+                            reg_kr    <= key_in(128 to 255);
+                            reg_kr_s  <= key_in(128 to 255);
+                        when others =>
+                            reg_kr    <= (others=>'0');
+                            reg_kr_s  <= (others=>'0');
+                    end case;
+                    k1_sel    <= SIG1;
+                when KEYb =>
+                    k1_sel    <= SIG2;
+                when KEYc =>
+                    k1_sel    <= SIG3;
+                when KEYd =>
+                    k1_sel    <= SIG4;
+                when KEYe =>
+                    reg_ka    <= data_from;
+                    reg_ka_s  <= data_from;
+                    k1_sel    <= SIG5;
+                when KEYf =>
+                    k1_sel    <= SIG6;
+                when SIX1a =>
+                    if (enc_dec = ENC) then
+                        if (coming_from_key = '1') then
+                            if (reg_k_len = KLEN_128) then
+                                reg_ka   <= data_from;
+                                reg_ka_s <= data_from;
+                            else
+                                reg_kb   <= data_from;
+                                reg_kb_s <= data_from;
+                            end if;
                         else
-                            reg_kb   <= data_from;
-                            reg_kb_s <= data_from;
+                            reg_ka_s <= reg_ka;
+                            reg_kb_s <= reg_kb;
+                            reg_kl_s <= reg_kl;
+                            reg_kr_s <= reg_kr;
                         end if;
-                    else
-                        reg_ka_s <= reg_ka;
-                        reg_kb_s <= reg_kb;
-                        reg_kl_s <= reg_kl;
-                        reg_kr_s <= reg_kr;
-                    end if;
-                    if (reg_k_len = KLEN_128) then
-                        k1_sel <= KA_L;
-                    else
-                        k1_sel <= KB_L;
-                    end if;
-                else -- DEC
-                    if (coming_from_key = '1') then
                         if (reg_k_len = KLEN_128) then
-                            reg_ka   <= data_from;
-                            reg_ka_s <= data_from(111 to 127) & data_from(0 to 110); -- >>> 17
+                            k1_sel <= KA_L;
                         else
-                            reg_kb   <= data_from;
-                            reg_kb_s <= data_from(111 to 127) & data_from(0 to 110); -- >>> 17
+                            k1_sel <= KB_L;
+                        end if;
+                    else -- DEC
+                        if (coming_from_key = '1') then
+                            if (reg_k_len = KLEN_128) then
+                                reg_ka   <= data_from;
+                                reg_ka_s <= data_from(111 to 127) & data_from(0 to 110); -- >>> 17
+                            else
+                                reg_kb   <= data_from;
+                                reg_kb_s <= data_from(111 to 127) & data_from(0 to 110); -- >>> 17
+                                reg_ka_s <= reg_ka_s(111 to 127) & reg_ka_s(0 to 110); -- >>> 17
+                                reg_kr_s <= reg_kr_s(111 to 127) & reg_kr_s(0 to 110); -- >>> 17
+                            end if;
+                            reg_kl_s  <= reg_kl_s(111 to 127) & reg_kl_s(0 to 110); -- >>> 17
+                        else
+                            reg_ka_s <= reg_ka(111 to 127) & reg_ka(0 to 110); -- >>> 17
+                            reg_kb_s <= reg_kb(111 to 127) & reg_kb(0 to 110); -- >>> 17
+                            reg_kl_s <= key_in(111 to 127) & key_in(0 to 110); --kl >>> 17
+                            reg_kr_s <= reg_kr(111 to 127) & reg_kr(0 to 110); -- >>> 17
+                        end if;
+                        k1_sel <= KL_R;
+                    end if;
+                    reg_enc_dec <= enc_dec;
+                when SIX1b =>
+                    coming_from_key  := '0';
+                    if (reg_enc_dec = ENC) then
+                        if (reg_k_len = KLEN_128) then
+                            k1_sel <= KA_R;
+                        else
+                            k1_sel <= KB_R;
+                        end if;
+                    else -- DEC
+                        k1_sel <= KL_L; -- for each value of reg_k_len
+                    end if;
+                when SIX1c =>
+                    if (reg_enc_dec = ENC) then
+                        if (reg_k_len = KLEN_128) then
+                            k1_sel <= KL_L;
+                            reg_kl_s  <= reg_kl_s(15 to 127) & reg_kl_s(0 to 14); -- <<< 15
+                        else
+                            k1_sel <= KR_L;
+                            reg_kr_s  <= reg_kr_s(15 to 127) & reg_kr_s(0 to 14); -- <<< 15
+                        end if;
+                    else -- DEC
+                        reg_ka_s <= reg_ka_s(111 to 127) & reg_ka_s(0 to 110); -- >>> 17
+                        k1_sel <= KA_R; -- for each value of reg_k_len
+                    end if;
+                when SIX1d =>
+                    if (reg_enc_dec = ENC) then
+                        if (reg_k_len = KLEN_128) then
+                            k1_sel <= KL_R;
+                        else
+                            k1_sel <= KR_R;
+                        end if;
+                    else -- DEC
+                        k1_sel <= KA_L; -- for each value of reg_k_len
+                    end if;
+                when SIX1e =>
+                    if (reg_enc_dec = ENC) then
+                        if (reg_k_len = KLEN_128) then
+                            reg_ka_s  <= reg_ka_s(15 to 127) & reg_ka_s(0 to 14); -- <<< 15
+                        else
+                            reg_ka_s  <= reg_ka_s(15 to 127) & reg_ka_s(0 to 14); -- <<< 15
+                        end if;
+                        k1_sel <= KA_L;
+                    else -- DEC
+                        if (reg_k_len = KLEN_128) then
+                            reg_kl_s <= reg_kl_s(111 to 127) & reg_kl_s(0 to 110); -- >>> 17
+                            k1_sel <= KL_R;
+                        else
+                            reg_kr_s <= reg_kr_s(111 to 127) & reg_kr_s(0 to 110); -- >>> 17
+                            k1_sel <= KR_R;
+                        end if;
+                    end if;
+                when SIX1f =>
+                    if (reg_enc_dec = ENC) then
+                        k1_sel <= KA_R;
+                    else -- DEC
+                        if (reg_k_len = KLEN_128) then
+                            k1_sel <= KL_L;
+                        else
+                            k1_sel <= KR_L;
+                        end if;
+                    end if;
+                when FL1 =>
+                    if (reg_enc_dec = ENC) then
+                        if (reg_k_len = KLEN_128) then
+                            k1_sel <= KA_L;
+                            k2_sel <= KA_R;
+                            reg_kl_s  <= reg_kl_s(15 to 127) & reg_kl_s(0 to 14); -- <<< 15
+                            reg_ka_s  <= reg_ka_s(15 to 127) & reg_ka_s(0 to 14); -- <<< 15
+                        else
+                            k1_sel <= KR_L;
+                            k2_sel <= KR_R;
+                            reg_kb_s  <= reg_kb_s(15 to 127) & reg_kb_s(0 to 14); -- <<< 15
+                            reg_kr_s  <= reg_kr_s(15 to 127) & reg_kr_s(0 to 14); -- <<< 15
+                        end if;
+                    else -- DEC
+                        if (reg_k_len = KLEN_128) then
+                            k1_sel <= KL_R;
+                            k2_sel <= KL_L;
+                        else
+                            k1_sel <= KA_R;
+                            k2_sel <= KA_L;
+                        end if;
+                        reg_ka_s <= reg_ka_s(111 to 127) & reg_ka_s(0 to 110); -- >>> 17
+                        reg_kl_s <= reg_kl_s(111 to 127) & reg_kl_s(0 to 110); -- >>> 17
+                    end if;
+                when SIX2a =>
+                    if (reg_enc_dec = ENC) then
+                        if (reg_k_len = KLEN_128) then
+                            k1_sel <= KL_L;
+                            reg_kl_s  <= reg_kl_s(15 to 127) & reg_kl_s(0 to 14); -- <<< 15
+                        else
+                            k1_sel <= KB_L;
+                            reg_kb_s  <= reg_kb_s(15 to 127) & reg_kb_s(0 to 14); -- <<< 15
+                            reg_kl_s  <= reg_kl_s(15 to 127) & reg_kl_s(0 to 14); -- <<< 15
+                        end if;
+                    else -- DEC
+                        if (reg_k_len = KLEN_128) then
+                            k1_sel <= KA_R;
                             reg_ka_s <= reg_ka_s(111 to 127) & reg_ka_s(0 to 110); -- >>> 17
+                        else
+                            k1_sel <= KL_R;
+                            reg_kb_s <= reg_kb_s(111 to 127) & reg_kb_s(0 to 110); -- >>> 17
+                            reg_kl_s <= reg_kl_s(111 to 127) & reg_kl_s(0 to 110); -- >>> 17
+                        end if;
+                    end if;
+                when SIX2b =>
+                    if (reg_enc_dec = ENC) then
+                        if (reg_k_len = KLEN_128) then
+                            k1_sel <= KL_R;
+                        else
+                            k1_sel <= KB_R;
+                            reg_kl_s  <= reg_kl_s(15 to 127) & reg_kl_s(0 to 14); -- <<< 15
+                        end if;
+                    else -- DEC
+                        if (reg_k_len = KLEN_128) then
+                            k1_sel <= KA_L;
+                        else
+                            k1_sel <= KL_L;
+                            reg_kb_s <= reg_kb_s(111 to 127) & reg_kb_s(0 to 110); -- >>> 17
+                        end if;
+                    end if;
+                when SIX2c =>
+                    if (reg_enc_dec = ENC) then
+                        if (reg_k_len = KLEN_128) then
+                            k1_sel <= KA_L;
+                            reg_ka_s  <= reg_ka_s(15 to 127) & reg_ka_s(0 to 14); -- <<< 15
+                        else
+                            k1_sel <= KL_L;
+                            reg_kl_s  <= reg_kl_s(15 to 127) & reg_kl_s(0 to 14); -- <<< 15
+                        end if;
+                    else -- DEC
+                        if (reg_k_len = KLEN_128) then
+                            k1_sel <= KL_R;
+                            reg_kl_s <= reg_kl_s(111 to 127) & reg_kl_s(0 to 110); -- >>> 17
+                        else
+                            k1_sel <= KB_R;
+                            reg_kb_s <= reg_kb_s(111 to 127) & reg_kb_s(0 to 110); -- >>> 17
+                        end if;
+                    end if;
+                when SIX2d =>
+                    if (reg_enc_dec = ENC) then
+                        if (reg_k_len = KLEN_128) then
+                            reg_kl_s  <= reg_kl_s(15 to 127) & reg_kl_s(0 to 14); -- <<< 15
+                        else
+                            reg_ka_s  <= reg_ka_s(15 to 127) & reg_ka_s(0 to 14); -- <<< 15
+                        end if;
+                        k1_sel <= KL_R;
+                    else -- DEC
+                        if (reg_k_len = KLEN_128) then
+                            k1_sel <= KA_L;
+                            reg_ka_s <= reg_ka_s(113 to 127) & reg_ka_s(0 to 112); -- >>> 15
+                        else
+                            k1_sel <= KB_L;
                             reg_kr_s <= reg_kr_s(111 to 127) & reg_kr_s(0 to 110); -- >>> 17
                         end if;
-                        reg_kl_s  <= reg_kl_s(111 to 127) & reg_kl_s(0 to 110); -- >>> 17
-                    else
-                        reg_ka_s <= reg_ka(111 to 127) & reg_ka(0 to 110); -- >>> 17
-                        reg_kb_s <= reg_kb(111 to 127) & reg_kb(0 to 110); -- >>> 17
-                        reg_kl_s <= key_in(111 to 127) & key_in(0 to 110); --kl >>> 17
-                        reg_kr_s <= reg_kr(111 to 127) & reg_kr(0 to 110); -- >>> 17
                     end if;
-                    k1_sel <= KL_R;
-                end if;
-                reg_enc_dec <= enc_dec;
-            when SIX1b =>
-                coming_from_key  := '0';
-                if (reg_enc_dec = ENC) then
-                    if (reg_k_len = KLEN_128) then
+                when SIX2e =>
+                    if (reg_enc_dec = ENC) then
+                        if (reg_k_len = KLEN_128) then
+                            reg_ka_s  <= reg_ka_s(15 to 127) & reg_ka_s(0 to 14); -- <<< 15
+                        else
+                            reg_ka_s  <= reg_ka_s(15 to 127) & reg_ka_s(0 to 14); -- <<< 15
+                        end if;
+                        k1_sel <= KA_L;
+                    else -- DEC
+                        if (reg_k_len = KLEN_128) then
+                            k1_sel <= KL_R;
+                            reg_kl_s <= reg_kl_s(113 to 127) & reg_kl_s(0 to 112); -- >>> 15
+                        else
+                            k1_sel <= KR_R;
+                            reg_kr_s <= reg_kr_s(111 to 127) & reg_kr_s(0 to 110); -- >>> 17
+                        end if;
+                    end if;
+                when SIX2f =>
+                    if (reg_enc_dec = ENC) then
                         k1_sel <= KA_R;
-                    else
-                        k1_sel <= KB_R;
+                    else -- DEC
+                        if (reg_k_len = KLEN_128) then
+                            k1_sel <= KL_L;
+                        else
+                            k1_sel <= KR_L;
+                        end if;
                     end if;
-                else -- DEC
-                    k1_sel <= KL_L; -- for each value of reg_k_len
-                end if;
-                data_acq <= '1';
-            when SIX1c =>
-                if (reg_enc_dec = ENC) then
-                    if (reg_k_len = KLEN_128) then
+                when FL2 =>
+                    if (reg_enc_dec = ENC) then
+                        if (reg_k_len = KLEN_128) then
+                            reg_kl_s  <= reg_kl_s(17 to 127) & reg_kl_s(0 to 16); -- <<< 17
+                        else
+                            reg_kr_s  <= reg_kr_s(15 to 127) & reg_kr_s(0 to 14); -- <<< 15
+                            reg_kl_s  <= reg_kl_s(15 to 127) & reg_kl_s(0 to 14); -- <<< 15
+                        end if;
                         k1_sel <= KL_L;
-                        reg_kl_s  <= reg_kl_s(15 to 127) & reg_kl_s(0 to 14); -- <<< 15
-                    else
-                        k1_sel <= KR_L;
-                        reg_kr_s  <= reg_kr_s(15 to 127) & reg_kr_s(0 to 14); -- <<< 15
+                        k2_sel <= KL_R;
+                    else -- DEC
+                        if (reg_k_len = KLEN_128) then
+                            k1_sel <= KA_R;
+                            k2_sel <= KA_L;
+                            reg_ka_s <= reg_ka_s(113 to 127) & reg_ka_s(0 to 112); -- >>> 15
+                        else
+                            k1_sel <= KL_R;
+                            k2_sel <= KL_L;
+                            reg_ka_s <= reg_ka_s(111 to 127) & reg_ka_s(0 to 110); -- >>> 17
+                            reg_kl_s <= reg_kl_s(111 to 127) & reg_kl_s(0 to 110); -- >>> 17
+                        end if;
                     end if;
-                else -- DEC
-                    reg_ka_s <= reg_ka_s(111 to 127) & reg_ka_s(0 to 110); -- >>> 17
-                    k1_sel <= KA_R; -- for each value of reg_k_len
-                end if;
-                data_acq <= '0';
-            when SIX1d =>
-                if (reg_enc_dec = ENC) then
-                    if (reg_k_len = KLEN_128) then
-                        k1_sel <= KL_R;
-                    else
-                        k1_sel <= KR_R;
-                    end if;
-                else -- DEC
-                    k1_sel <= KA_L; -- for each value of reg_k_len
-                end if;
-            when SIX1e =>
-                if (reg_enc_dec = ENC) then
-                    if (reg_k_len = KLEN_128) then
-                        reg_ka_s  <= reg_ka_s(15 to 127) & reg_ka_s(0 to 14); -- <<< 15
-                    else
-                        reg_ka_s  <= reg_ka_s(15 to 127) & reg_ka_s(0 to 14); -- <<< 15
-                    end if;
-                    k1_sel <= KA_L;
-                else -- DEC
-                    if (reg_k_len = KLEN_128) then
-                        reg_kl_s <= reg_kl_s(111 to 127) & reg_kl_s(0 to 110); -- >>> 17
-                        k1_sel <= KL_R;
-                    else
-                        reg_kr_s <= reg_kr_s(111 to 127) & reg_kr_s(0 to 110); -- >>> 17
-                        k1_sel <= KR_R;
-                    end if;
-                end if;
-            when SIX1f =>
-                if (reg_enc_dec = ENC) then
-                    k1_sel <= KA_R;
-                else -- DEC
-                    if (reg_k_len = KLEN_128) then
-                        k1_sel <= KL_L;
-                    else
-                        k1_sel <= KR_L;
-                    end if;
-                end if;
-            when FL1 =>
-                if (reg_enc_dec = ENC) then
-                    if (reg_k_len = KLEN_128) then
-                        k1_sel <= KA_L;
-                        k2_sel <= KA_R;
-                        reg_kl_s  <= reg_kl_s(15 to 127) & reg_kl_s(0 to 14); -- <<< 15
-                        reg_ka_s  <= reg_ka_s(15 to 127) & reg_ka_s(0 to 14); -- <<< 15
-                    else
-                        k1_sel <= KR_L;
-                        k2_sel <= KR_R;
-                        reg_kb_s  <= reg_kb_s(15 to 127) & reg_kb_s(0 to 14); -- <<< 15
-                        reg_kr_s  <= reg_kr_s(15 to 127) & reg_kr_s(0 to 14); -- <<< 15
-                    end if;
-                else -- DEC
-                    if (reg_k_len = KLEN_128) then
-                        k1_sel <= KL_R;
-                        k2_sel <= KL_L;
-                    else
-                        k1_sel <= KA_R;
-                        k2_sel <= KA_L;
-                    end if;
-                    reg_ka_s <= reg_ka_s(111 to 127) & reg_ka_s(0 to 110); -- >>> 17
-                    reg_kl_s <= reg_kl_s(111 to 127) & reg_kl_s(0 to 110); -- >>> 17
-                end if;
-            when SIX2a =>
-                if (reg_enc_dec = ENC) then
-                    if (reg_k_len = KLEN_128) then
-                        k1_sel <= KL_L;
-                        reg_kl_s  <= reg_kl_s(15 to 127) & reg_kl_s(0 to 14); -- <<< 15
-                    else
-                        k1_sel <= KB_L;
-                        reg_kb_s  <= reg_kb_s(15 to 127) & reg_kb_s(0 to 14); -- <<< 15
-                        reg_kl_s  <= reg_kl_s(15 to 127) & reg_kl_s(0 to 14); -- <<< 15
-                    end if;
-                else -- DEC
-                    if (reg_k_len = KLEN_128) then
-                        k1_sel <= KA_R;
-                        reg_ka_s <= reg_ka_s(111 to 127) & reg_ka_s(0 to 110); -- >>> 17
-                    else
-                        k1_sel <= KL_R;
-                        reg_kb_s <= reg_kb_s(111 to 127) & reg_kb_s(0 to 110); -- >>> 17
-                        reg_kl_s <= reg_kl_s(111 to 127) & reg_kl_s(0 to 110); -- >>> 17
-                    end if;
-                end if;
-            when SIX2b =>
-                if (reg_enc_dec = ENC) then
-                    if (reg_k_len = KLEN_128) then
-                        k1_sel <= KL_R;
-                    else
-                        k1_sel <= KB_R;
-                        reg_kl_s  <= reg_kl_s(15 to 127) & reg_kl_s(0 to 14); -- <<< 15
-                    end if;
-                else -- DEC
-                    if (reg_k_len = KLEN_128) then
-                        k1_sel <= KA_L;
-                    else
-                        k1_sel <= KL_L;
-                        reg_kb_s <= reg_kb_s(111 to 127) & reg_kb_s(0 to 110); -- >>> 17
-                    end if;
-                end if;
-            when SIX2c =>
-                if (reg_enc_dec = ENC) then
-                    if (reg_k_len = KLEN_128) then
-                        k1_sel <= KA_L;
-                        reg_ka_s  <= reg_ka_s(15 to 127) & reg_ka_s(0 to 14); -- <<< 15
-                    else
-                        k1_sel <= KL_L;
-                        reg_kl_s  <= reg_kl_s(15 to 127) & reg_kl_s(0 to 14); -- <<< 15
-                    end if;
-                else -- DEC
-                    if (reg_k_len = KLEN_128) then
-                        k1_sel <= KL_R;
-                        reg_kl_s <= reg_kl_s(111 to 127) & reg_kl_s(0 to 110); -- >>> 17
-                    else
-                        k1_sel <= KB_R;
-                        reg_kb_s <= reg_kb_s(111 to 127) & reg_kb_s(0 to 110); -- >>> 17
-                    end if;
-                end if;
-            when SIX2d =>
-                if (reg_enc_dec = ENC) then
-                    if (reg_k_len = KLEN_128) then
-                        reg_kl_s  <= reg_kl_s(15 to 127) & reg_kl_s(0 to 14); -- <<< 15
-                    else
-                        reg_ka_s  <= reg_ka_s(15 to 127) & reg_ka_s(0 to 14); -- <<< 15
-                    end if;
-                    k1_sel <= KL_R;
-                else -- DEC
-                    if (reg_k_len = KLEN_128) then
-                        k1_sel <= KA_L;
+                when SIX3a =>
+                    if (reg_enc_dec = ENC) then
+                        if (reg_k_len = KLEN_128) then
+                            k1_sel <= KL_L;
+                            reg_kl_s  <= reg_kl_s(17 to 127) & reg_kl_s(0 to 16); -- <<< 17
+                        else
+                            k1_sel <= KR_L;
+                            reg_kr_s  <= reg_kr_s(15 to 127) & reg_kr_s(0 to 14); -- <<< 15
+                        end if;
+                    else -- DEC
+                        if (reg_k_len = KLEN_128) then
+                            k1_sel <= KA_R;
+                        else
+                            k1_sel <= KA_R;
+                        end if;
                         reg_ka_s <= reg_ka_s(113 to 127) & reg_ka_s(0 to 112); -- >>> 15
-                    else
-                        k1_sel <= KB_L;
-                        reg_kr_s <= reg_kr_s(111 to 127) & reg_kr_s(0 to 110); -- >>> 17
                     end if;
-                end if;
-            when SIX2e =>
-                if (reg_enc_dec = ENC) then
-                    if (reg_k_len = KLEN_128) then
-                        reg_ka_s  <= reg_ka_s(15 to 127) & reg_ka_s(0 to 14); -- <<< 15
-                    else
-                        reg_ka_s  <= reg_ka_s(15 to 127) & reg_ka_s(0 to 14); -- <<< 15
+                when SIX3b =>
+                    if (reg_enc_dec = ENC) then
+                        if (reg_k_len = KLEN_128) then
+                            k1_sel <= KL_R;
+                            reg_ka_s  <= reg_ka_s(17 to 127) & reg_ka_s(0 to 16); -- <<< 17
+                        else
+                            k1_sel <= KR_R;
+                            reg_kb_s  <= reg_kb_s(15 to 127) & reg_kb_s(0 to 14); -- <<< 15
+                        end if;
+                    else -- DEC
+                        if (reg_k_len = KLEN_128) then
+                            k1_sel <= KA_L;
+                            reg_kl_s <= reg_kl_s(113 to 127) & reg_kl_s(0 to 112); -- >>> 15
+                        else
+                            k1_sel <= KA_L;
+                        end if;
                     end if;
-                    k1_sel <= KA_L;
-                else -- DEC
-                    if (reg_k_len = KLEN_128) then
-                        k1_sel <= KL_R;
+                when SIX3c =>
+                    if (reg_enc_dec = ENC) then
+                        if (reg_k_len = KLEN_128) then
+                            k1_sel <= KA_L;
+                            reg_ka_s  <= reg_ka_s(17 to 127) & reg_ka_s(0 to 16); -- <<< 17
+                        else
+                            k1_sel <= KB_L;
+                            reg_kb_s  <= reg_kb_s(15 to 127) & reg_kb_s(0 to 14); -- <<< 15
+                        end if;
+                    else -- DEC
+                        if (reg_k_len = KLEN_128) then
+                            k1_sel <= KL_R;
+                        else
+                            k1_sel <= KL_R;
+                        end if;
                         reg_kl_s <= reg_kl_s(113 to 127) & reg_kl_s(0 to 112); -- >>> 15
-                    else
-                        k1_sel <= KR_R;
-                        reg_kr_s <= reg_kr_s(111 to 127) & reg_kr_s(0 to 110); -- >>> 17
                     end if;
-                end if;
-            when SIX2f =>
-                if (reg_enc_dec = ENC) then
-                    k1_sel <= KA_R;
-                else -- DEC
-                    if (reg_k_len = KLEN_128) then
+                when SIX3d =>
+                    if (reg_enc_dec = ENC) then
+                        if (reg_k_len = KLEN_128) then
+                            k1_sel <= KA_R;
+                        else
+                            k1_sel <= KB_R;
+                        end if;
+                    else -- DEC
+                        if (reg_k_len = KLEN_128) then
+                            k1_sel <= KL_L;
+                        else
+                            k1_sel <= KL_L;
+                            reg_kb_s <= reg_kb_s(113 to 127) & reg_kb_s(0 to 112); -- >>> 15
+                        end if;
+                    end if;
+                when SIX3e =>
+                    if (reg_enc_dec = ENC) then
+                        if (reg_k_len = KLEN_128) then
+                            reg_kl_s  <= reg_kl_s(17 to 127) & reg_kl_s(0 to 16); -- <<< 17
+                        else
+                            reg_kl_s  <= reg_kl_s(17 to 127) & reg_kl_s(0 to 16); -- <<< 17
+                        end if;
                         k1_sel <= KL_L;
-                    else
-                        k1_sel <= KR_L;
+                    else -- DEC
+                        if (reg_k_len = KLEN_128) then
+                            k1_sel <= KA_R;
+                            reg_ka_s <= reg_ka_s(113 to 127) & reg_ka_s(0 to 112); -- >>> 15
+                        else
+                            k1_sel <= KB_R;
+                            reg_kb_s <= reg_kb_s(113 to 127) & reg_kb_s(0 to 112); -- >>> 15
+                        end if;
                     end if;
-                end if;
-            when FL2 =>
-                if (reg_enc_dec = ENC) then
-                    if (reg_k_len = KLEN_128) then
-                        reg_kl_s  <= reg_kl_s(17 to 127) & reg_kl_s(0 to 16); -- <<< 17
-                    else
-                        reg_kr_s  <= reg_kr_s(15 to 127) & reg_kr_s(0 to 14); -- <<< 15
-                        reg_kl_s  <= reg_kl_s(15 to 127) & reg_kl_s(0 to 14); -- <<< 15
+                when SIX3f =>
+                    if (reg_enc_dec = ENC) then
+                        if (reg_k_len = KLEN_128) then
+                            reg_ka_s  <= reg_ka_s(17 to 127) & reg_ka_s(0 to 16); -- <<< 17
+                        else
+                            reg_ka_s  <= reg_ka_s(15 to 127) & reg_ka_s(0 to 14); -- <<< 15
+                        end if;
+                        k1_sel <= KL_R;
+                    else -- DEC
+                        if (reg_k_len = KLEN_128) then
+                            k1_sel <= KA_L;
+                            reg_kl_s <= reg_kl_s(113 to 127) & reg_kl_s(0 to 112); -- >>> 15
+                        else
+                            k1_sel <= KB_L;
+                            reg_kr_s <= reg_kr_s(113 to 127) & reg_kr_s(0 to 112); -- >>> 15
+                        end if;
                     end if;
-                    k1_sel <= KL_L;
-                    k2_sel <= KL_R;
-                else -- DEC
-                    if (reg_k_len = KLEN_128) then
-                        k1_sel <= KA_R;
-                        k2_sel <= KA_L;
+                when FL3 =>
+                    if (reg_enc_dec = ENC) then
+                        k1_sel  <= KA_L;
+                        k2_sel  <= KA_R;
+                        reg_kr_s  <= reg_kr_s(17 to 127) & reg_kr_s(0 to 16); -- <<< 17
+                        reg_ka_s  <= reg_ka_s(17 to 127) & reg_ka_s(0 to 16); -- <<< 17
+                    else -- DEC
+                        k1_sel  <= KR_R;
+                        k2_sel  <= KR_L;
                         reg_ka_s <= reg_ka_s(113 to 127) & reg_ka_s(0 to 112); -- >>> 15
-                    else
-                        k1_sel <= KL_R;
-                        k2_sel <= KL_L;
-                        reg_ka_s <= reg_ka_s(111 to 127) & reg_ka_s(0 to 110); -- >>> 17
-                        reg_kl_s <= reg_kl_s(111 to 127) & reg_kl_s(0 to 110); -- >>> 17
-                    end if;
-                end if;
-            when SIX3a =>
-                if (reg_enc_dec = ENC) then
-                    if (reg_k_len = KLEN_128) then
-                        k1_sel <= KL_L;
-                        reg_kl_s  <= reg_kl_s(17 to 127) & reg_kl_s(0 to 16); -- <<< 17
-                    else
-                        k1_sel <= KR_L;
-                        reg_kr_s  <= reg_kr_s(15 to 127) & reg_kr_s(0 to 14); -- <<< 15
-                    end if;
-                else -- DEC
-                    if (reg_k_len = KLEN_128) then
-                        k1_sel <= KA_R;
-                    else
-                        k1_sel <= KA_R;
-                    end if;
-                    reg_ka_s <= reg_ka_s(113 to 127) & reg_ka_s(0 to 112); -- >>> 15
-                end if;
-            when SIX3b =>
-                if (reg_enc_dec = ENC) then
-                    if (reg_k_len = KLEN_128) then
-                        k1_sel <= KL_R;
-                        reg_ka_s  <= reg_ka_s(17 to 127) & reg_ka_s(0 to 16); -- <<< 17
-                    else
-                        k1_sel <= KR_R;
-                        reg_kb_s  <= reg_kb_s(15 to 127) & reg_kb_s(0 to 14); -- <<< 15
-                    end if;
-                else -- DEC
-                    if (reg_k_len = KLEN_128) then
-                        k1_sel <= KA_L;
-                        reg_kl_s <= reg_kl_s(113 to 127) & reg_kl_s(0 to 112); -- >>> 15
-                    else
-                        k1_sel <= KA_L;
-                    end if;
-                end if;
-            when SIX3c =>
-                if (reg_enc_dec = ENC) then
-                    if (reg_k_len = KLEN_128) then
-                        k1_sel <= KA_L;
-                        reg_ka_s  <= reg_ka_s(17 to 127) & reg_ka_s(0 to 16); -- <<< 17
-                    else
-                        k1_sel <= KB_L;
-                        reg_kb_s  <= reg_kb_s(15 to 127) & reg_kb_s(0 to 14); -- <<< 15
-                    end if;
-                else -- DEC
-                    if (reg_k_len = KLEN_128) then
-                        k1_sel <= KL_R;
-                    else
-                        k1_sel <= KL_R;
-                    end if;
-                    reg_kl_s <= reg_kl_s(113 to 127) & reg_kl_s(0 to 112); -- >>> 15
-                end if;
-            when SIX3d =>
-                if (reg_enc_dec = ENC) then
-                    if (reg_k_len = KLEN_128) then
-                        k1_sel <= KA_R;
-                    else
-                        k1_sel <= KB_R;
-                    end if;
-                else -- DEC
-                    if (reg_k_len = KLEN_128) then
-                        k1_sel <= KL_L;
-                    else
-                        k1_sel <= KL_L;
-                        reg_kb_s <= reg_kb_s(113 to 127) & reg_kb_s(0 to 112); -- >>> 15
-                    end if;
-                end if;
-            when SIX3e =>
-                if (reg_enc_dec = ENC) then
-                    if (reg_k_len = KLEN_128) then
-                        reg_kl_s  <= reg_kl_s(17 to 127) & reg_kl_s(0 to 16); -- <<< 17
-                    else
-                        reg_kl_s  <= reg_kl_s(17 to 127) & reg_kl_s(0 to 16); -- <<< 17
-                    end if;
-                    k1_sel <= KL_L;
-                else -- DEC
-                    if (reg_k_len = KLEN_128) then
-                        k1_sel <= KA_R;
-                        reg_ka_s <= reg_ka_s(113 to 127) & reg_ka_s(0 to 112); -- >>> 15
-                    else
-                        k1_sel <= KB_R;
-                        reg_kb_s <= reg_kb_s(113 to 127) & reg_kb_s(0 to 112); -- >>> 15
-                    end if;
-                end if;
-            when SIX3f =>
-                if (reg_enc_dec = ENC) then
-                    if (reg_k_len = KLEN_128) then
-                        reg_ka_s  <= reg_ka_s(17 to 127) & reg_ka_s(0 to 16); -- <<< 17
-                    else
-                        reg_ka_s  <= reg_ka_s(15 to 127) & reg_ka_s(0 to 14); -- <<< 15
-                    end if;
-                    k1_sel <= KL_R;
-                else -- DEC
-                    if (reg_k_len = KLEN_128) then
-                        k1_sel <= KA_L;
-                        reg_kl_s <= reg_kl_s(113 to 127) & reg_kl_s(0 to 112); -- >>> 15
-                    else
-                        k1_sel <= KB_L;
                         reg_kr_s <= reg_kr_s(113 to 127) & reg_kr_s(0 to 112); -- >>> 15
                     end if;
-                end if;
-            when FL3 =>
-                if (reg_enc_dec = ENC) then
-                    k1_sel  <= KA_L;
-                    k2_sel  <= KA_R;
-                    reg_kr_s  <= reg_kr_s(17 to 127) & reg_kr_s(0 to 16); -- <<< 17
-                    reg_ka_s  <= reg_ka_s(17 to 127) & reg_ka_s(0 to 16); -- <<< 17
-                else -- DEC
-                    k1_sel  <= KR_R;
-                    k2_sel  <= KR_L;
-                    reg_ka_s <= reg_ka_s(113 to 127) & reg_ka_s(0 to 112); -- >>> 15
-                    reg_kr_s <= reg_kr_s(113 to 127) & reg_kr_s(0 to 112); -- >>> 15
-                end if;
-            when SIX4a =>
-                if (reg_enc_dec = ENC) then
-                    k1_sel <= KR_L;
-                    reg_kr_s  <= reg_kr_s(17 to 127) & reg_kr_s(0 to 16); -- <<< 17
-                else -- DEC
-                    k1_sel <= KA_R;
-                    reg_ka_s <= reg_ka_s(113 to 127) & reg_ka_s(0 to 112); -- >>> 15
-                end if;
-            when SIX4b =>
-                if (reg_enc_dec = ENC) then
-                    k1_sel <= KR_R;
-                else -- DEC
-                    k1_sel <= KA_L;
-                end if;
-            when SIX4c =>
-                if (reg_enc_dec = ENC) then
-                    k1_sel <= KA_L;
-                    reg_ka_s  <= reg_ka_s(17 to 127) & reg_ka_s(0 to 16); -- <<< 17
-                else -- DEC
-                    k1_sel <= KR_R;
-                    reg_kr_s <= reg_kr_s(113 to 127) & reg_kr_s(0 to 112); -- >>> 15
-                end if;
-            when SIX4d =>
-                if (reg_enc_dec = ENC) then
-                    k1_sel <= KA_R;
-                    reg_kl_s  <= reg_kl_s(17 to 127) & reg_kl_s(0 to 16); -- <<< 17
-                    reg_kb_s  <= reg_kb_s(17 to 127) & reg_kb_s(0 to 16); -- <<< 17
-                else -- DEC
-                    k1_sel <= KR_L;
-                    reg_kb_s <= reg_kb_s(113 to 127) & reg_kb_s(0 to 112); -- >>> 15
-                    reg_kl_s <= reg_kl_s(113 to 127) & reg_kl_s(0 to 112); -- >>> 15
-                end if;
-            when SIX4e =>
-                if (reg_enc_dec = ENC) then
-                    k1_sel <= KL_L;
-                    reg_kl_s  <= reg_kl_s(17 to 127) & reg_kl_s(0 to 16); -- <<< 17
-                    reg_kb_s  <= reg_kb_s(17 to 127) & reg_kb_s(0 to 16); -- <<< 17
-                else -- DEC
-                    k1_sel <= KB_R;
-                    reg_kb_s <= reg_kb_s(113 to 127) & reg_kb_s(0 to 112); -- >>> 15
-                    reg_kl_s <= reg_kl_s(113 to 127) & reg_kl_s(0 to 112); -- >>> 15
-                end if;
-            when SIX4f =>
-                if (reg_enc_dec = ENC) then
-                    k1_sel <= KL_R;
-                    reg_kb_s  <= reg_kb_s(17 to 127) & reg_kb_s(0 to 16); -- <<< 17
-                else -- DEC
-                    k1_sel <= KB_L;
-                    reg_kl_s <= reg_kl_s(113 to 127) & reg_kl_s(0 to 112); -- >>> 15
-                end if;
-            when WT =>
-                -- do nothing
-        end case;
-
-        if (PS = KEYa) then
-            data_to <= key_in(0 to 127); --kl
-        else
-            data_to <= data_in;
-        end if;
-
-        case PS is
-            when KEYc =>
-                prexor_sel <= KL;
-            when KEYa | KEYe =>
-                prexor_sel <= KR;
-            when SIX1a =>
-                if (enc_dec = ENC) then
-                    prexor_sel <= KL;
-                else
-                    if (reg_k_len = KLEN_128) then
-                        prexor_sel <= KA;
-                    else
-                        prexor_sel <= KB;
-                    end if;
-                end if;
-            when others =>
-                prexor_sel <= ZERO;
-        end case;
-
-        case PS is
-            when SIX3f =>
-                if (reg_k_len = KLEN_128) then
+                when SIX4a =>
                     if (reg_enc_dec = ENC) then
-                        postxor_sel <= KA;
+                        k1_sel <= KR_L;
+                        reg_kr_s  <= reg_kr_s(17 to 127) & reg_kr_s(0 to 16); -- <<< 17
+                    else -- DEC
+                        k1_sel <= KA_R;
+                        reg_ka_s <= reg_ka_s(113 to 127) & reg_ka_s(0 to 112); -- >>> 15
+                    end if;
+                when SIX4b =>
+                    if (reg_enc_dec = ENC) then
+                        k1_sel <= KR_R;
+                    else -- DEC
+                        k1_sel <= KA_L;
+                    end if;
+                when SIX4c =>
+                    if (reg_enc_dec = ENC) then
+                        k1_sel <= KA_L;
+                        reg_ka_s  <= reg_ka_s(17 to 127) & reg_ka_s(0 to 16); -- <<< 17
+                    else -- DEC
+                        k1_sel <= KR_R;
+                        reg_kr_s <= reg_kr_s(113 to 127) & reg_kr_s(0 to 112); -- >>> 15
+                    end if;
+                when SIX4d =>
+                    if (reg_enc_dec = ENC) then
+                        k1_sel <= KA_R;
+                        reg_kl_s  <= reg_kl_s(17 to 127) & reg_kl_s(0 to 16); -- <<< 17
+                        reg_kb_s  <= reg_kb_s(17 to 127) & reg_kb_s(0 to 16); -- <<< 17
+                    else -- DEC
+                        k1_sel <= KR_L;
+                        reg_kb_s <= reg_kb_s(113 to 127) & reg_kb_s(0 to 112); -- >>> 15
+                        reg_kl_s <= reg_kl_s(113 to 127) & reg_kl_s(0 to 112); -- >>> 15
+                    end if;
+                when SIX4e =>
+                    if (reg_enc_dec = ENC) then
+                        k1_sel <= KL_L;
+                        reg_kl_s  <= reg_kl_s(17 to 127) & reg_kl_s(0 to 16); -- <<< 17
+                        reg_kb_s  <= reg_kb_s(17 to 127) & reg_kb_s(0 to 16); -- <<< 17
+                    else -- DEC
+                        k1_sel <= KB_R;
+                        reg_kb_s <= reg_kb_s(113 to 127) & reg_kb_s(0 to 112); -- >>> 15
+                        reg_kl_s <= reg_kl_s(113 to 127) & reg_kl_s(0 to 112); -- >>> 15
+                    end if;
+                when SIX4f =>
+                    if (reg_enc_dec = ENC) then
+                        k1_sel <= KL_R;
+                        reg_kb_s  <= reg_kb_s(17 to 127) & reg_kb_s(0 to 16); -- <<< 17
+                    else -- DEC
+                        k1_sel <= KB_L;
+                        reg_kl_s <= reg_kl_s(113 to 127) & reg_kl_s(0 to 112); -- >>> 15
+                    end if;
+                when WT =>
+                    -- do nothing
+            end case;
+
+            if (PS = KEYa) then
+                data_to <= key_in(0 to 127); --kl
+            else
+                data_to <= data_in;
+            end if;
+
+            case PS is
+                when KEYc =>
+                    prexor_sel <= KL;
+                when KEYa | KEYe =>
+                    prexor_sel <= KR;
+                when SIX1a =>
+                    if (enc_dec = ENC) then
+                        prexor_sel <= KL;
+                    else
+                        if (reg_k_len = KLEN_128) then
+                            prexor_sel <= KA;
+                        else
+                            prexor_sel <= KB;
+                        end if;
+                    end if;
+                when others =>
+                    prexor_sel <= ZERO;
+            end case;
+
+            case PS is
+                when SIX3f =>
+                    if (reg_k_len = KLEN_128) then
+                        if (reg_enc_dec = ENC) then
+                            postxor_sel <= KA;
+                        else
+                            postxor_sel <= KL;
+                        end if;
+                    else
+                        postxor_sel <= ZERO;
+                    end if;
+                when SIX4f =>
+                    if (reg_enc_dec = ENC) then
+                        postxor_sel <= KB;
                     else
                         postxor_sel <= KL;
                     end if;
-                else
+                when others =>
                     postxor_sel <= ZERO;
-                end if;
-            when SIX4f =>
-                if (reg_enc_dec = ENC) then
-                    postxor_sel <= KB;
-                else
-                    postxor_sel <= KL;
-                end if;
-            when others =>
-                postxor_sel <= ZERO;
-        end case;
+            end case;
 
-        if (PS = SIX1a or PS = KEYa) then
-            newdata <= '1';
-        else
-            newdata <= '0';
-        end if;
-        
-        if ((PS = SIX3f and reg_k_len = KLEN_128) or PS = SIX4f) then
-            output_rdy <= '1';
-        else
-            output_rdy <= '0';
-        end if;
+            if (PS = SIX1a or PS = KEYa) then
+                newdata <= '1';
+            else
+                newdata <= '0';
+            end if;
+            
+            if ((PS = SIX3f and reg_k_len = KLEN_128) or PS = SIX4f) then
+                output_rdy <= '1';
+            else
+                output_rdy <= '0';
+            end if;
 
-        if (PS = FL1 or PS = FL2 or PS = FL3) then
-            sel <= SEL_FL;
-        else
-            sel <= SEL_F;
+            if (PS = FL1 or PS = FL2 or PS = FL3) then
+                sel <= SEL_FL;
+            else
+                sel <= SEL_F;
+            end if;
+            
+            if (PS = KEYb) then
+                key_acq   <=  '1';
+            else
+                key_acq   <=  '0';
+            end if;
+            
+            if (PS = SIX1b) then
+                data_acq   <=  '1';
+            else
+                data_acq   <=  '0';
+            end if;
+            
         end if;
     end if;
+    
     end process;
 
-    STATE_UPDATE: process (clk)
+    STATE_UPDATE: process (reset, clk)
     begin
 
-        if (clk'event and clk = '1') then
-
-            if (reset = '1') then
-                PS <= RST;
-            else
+        if (reset = '1') then
+            PS <= KEYa;
+        else
+            if (clk'event and clk = '1') then
                 PS <= NS;
             end if;
         end if;
@@ -698,8 +707,6 @@ begin
     NEXT_STATE: process (PS, data_rdy, key_rdy)
     begin
                case PS is
-                when RST =>
-                    NS <= KEYa;
                 when KEYa =>
                     if(key_rdy = '1') then
                         NS <= KEYb;
@@ -808,8 +815,6 @@ begin
                             NS <= WT;
                         end if;
                     end if;
---              when others =>
---                  NS <= RST;
             end case;
     end process;
 

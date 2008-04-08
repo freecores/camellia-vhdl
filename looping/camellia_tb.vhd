@@ -3,7 +3,7 @@
 -- Designer:      Paolo Fulgoni <pfulgoni@opencores.org>
 --
 -- Create Date:   02/19/2008
--- Last Update:   03/28/2008
+-- Last Update:   04/02/2008
 -- Project Name:  camellia-vhdl
 -- Description:   VHDL Test Bench for module camellia
 --
@@ -69,7 +69,7 @@ architecture RTL of camellia_tb is
     constant KLEN_256    : STD_LOGIC_VECTOR (0 to 1) := "10";
     constant ENC         : STD_LOGIC := '0';
     constant DEC         : STD_LOGIC := '1';
-    constant CLK_PERIOD  : TIME := 20 ns;
+    constant CLK_PERIOD  : TIME := 100 ns;
 
 begin
 
@@ -80,8 +80,9 @@ begin
     tb    : process
     begin
         reset <= '1';
-        wait for 15 ns;
+        wait for 80 ns;
         reset <= '0';
+        wait until clk = '1';
         
         data_in   <= X"0123456789abcdeffedcba9876543210";
         enc_dec   <= ENC;
@@ -96,6 +97,21 @@ begin
         wait until data_acq = '1';
         data_in   <= X"67673138549669730857065648eabe43";
         enc_dec   <= DEC;
+        
+        wait until data_acq = '1';
+        data_in   <= X"0123456789abcdeffedcba9876543210";
+        enc_dec   <= ENC;
+        data_rdy  <= '1';
+        key       <= X"0123456789abcdeffedcba987654321000112233445566778899aabbccddeeff";
+        k_len     <= KLEN_192;
+        key_rdy   <= '1';
+        
+        wait until key_acq = '1';
+        key_rdy   <= '0';
+        
+        wait until data_acq = '1';
+        data_rdy  <= '0';
+        
         
         wait;
     end process;

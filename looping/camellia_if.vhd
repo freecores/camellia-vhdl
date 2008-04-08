@@ -3,7 +3,7 @@
 -- Designer:      Paolo Fulgoni <pfulgoni@opencores.org>
 --
 -- Create Date:   03/25/2008
--- Last Update:   03/28/2008
+-- Last Update:   04/02/2008
 -- Project Name:  camellia-vhdl
 -- Description:   Interface to the Camellia core
 --
@@ -78,15 +78,17 @@ architecture RTL of CAMELLIA_IF is
     signal  s_data_out   : STD_LOGIC_VECTOR (0 to 127);
     signal  s_output_rdy : STD_LOGIC;
     
-    signal  key_count    : STD_LOGIC_VECTOR (3 downto 0);
-    signal  din_count    : STD_LOGIC_VECTOR (2 downto 0);
-    signal  dout_count   : STD_LOGIC_VECTOR (2 downto 0);
+    signal  key_count     : STD_LOGIC_VECTOR (3 downto 0);
+    signal  din_count     : STD_LOGIC_VECTOR (2 downto 0);
+    signal  dout_count    : STD_LOGIC_VECTOR (2 downto 0);
     
-    signal  reg_key      : STD_LOGIC_VECTOR (0 to 255);
-    signal  reg_din      : STD_LOGIC_VECTOR (0 to 127);
-    signal  reg_dout     : STD_LOGIC_VECTOR (0 to 127);
+    signal  reg_key       : STD_LOGIC_VECTOR (0 to 255);
+    signal  reg_din       : STD_LOGIC_VECTOR (0 to 127);
+    signal  reg_dout      : STD_LOGIC_VECTOR (0 to 127);
+    signal  reg_next_data : STD_LOGIC;
+    signal  reg_next_key  : STD_LOGIC;
     
-    signal  int_out_rdy  : STD_LOGIC;
+    signal  int_out_rdy   : STD_LOGIC;
     
     -- input constant
     constant KLEN_128 : STD_LOGIC_VECTOR (0 to 1) := "00";
@@ -105,20 +107,14 @@ begin
     begin
         
         if (reset = '1') then
-            next_key  <= '1';
+            reg_next_key  <= '1';
             key_count <= "0000";
             reg_key   <= (others=>'0');
+            s_key_rdy <= '0';
         elsif (clk'event and clk = '1') then
         
-            if ((key_count = "0111" and k_len = KLEN_128) or
-                 key_count = "1111") then
-                s_key_rdy <= '1';
-            elsif (s_key_acq = '1') then
-                s_key_rdy <= '0';
-                next_key  <= '1';
-            end if;
-            
             if (en_key = '1') then
+                reg_next_key <= '0';
                 key_count <= key_count + "0001";
                 case k_len is
                     when KLEN_128 =>
@@ -130,7 +126,22 @@ begin
                 end case;
             else
                 key_count <= "0000";
-            end if;   
+                if (s_key_acq = '1') then
+                    reg_next_key  <= '1';
+                else
+                    reg_next_key  <= reg_next_key;
+                end if;
+            end if;  
+        
+            if ((key_count = "0111" and k_len = KLEN_128) or
+                (key_count = "1100" and k_len = KLEN_192) or
+                 key_count = "1111") then
+                s_key_rdy <= '1';
+            elsif (s_key_acq = '1') then
+                s_key_rdy <= '0';
+            else
+                s_key_rdy <= s_key_rdy;
+            end if;
                      
         end if;
         
@@ -140,24 +151,32 @@ begin
     begin
         
         if (reset = '1') then
-            next_data  <= '1';
+            reg_next_data <= '1';
             din_count <= "000";
             reg_din   <= (others=>'0');
+            s_data_rdy <= '0';
         elsif (clk'event and clk = '1') then
-        
+            
+            if (en_data = '1') then
+                reg_next_data <= '0';
+                din_count <= din_count + "001";
+                reg_din   <= reg_din(16 to 127) & data_in;
+            else
+                din_count <= "000";
+                if (s_data_acq = '1') then
+                    reg_next_data  <= '1';
+                else
+                    reg_next_data  <= reg_next_data;
+                end if;
+            end if;
+            
             if (din_count = "111") then
                 s_data_rdy <= '1';
             elsif (s_data_acq = '1') then
                 s_data_rdy <= '0';
-                next_data  <= '1';
-            end if;
-            
-            if (en_data = '1') then
-                din_count <= din_count + "001";
-                reg_din <= reg_din(16 to 127) & data_in;
             else
-                din_count <= "000";
-            end if;   
+                s_data_rdy <= s_data_rdy;
+            end if;
                      
         end if;
         
@@ -172,18 +191,18 @@ begin
             reg_dout    <= (others=>'0');
         elsif (clk'event and clk = '1') then
             
-            if (s_output_rdy = '1' and int_out_rdy = '0') then
-                dout_count <= "000";
-                reg_dout <= s_data_out;
-                int_out_rdy<= '1';
-            end if;
-            
             if (int_out_rdy = '1') then
                 if (dout_count /= "111") then
                     dout_count <= dout_count + "001";
                     reg_dout   <= reg_dout(16 to 127) & X"0000"; -- <<< 16
                 else
                     int_out_rdy <= '0';
+                end if;
+            else
+                if (s_output_rdy = '1') then
+                    dout_count <= "000";
+                    reg_dout <= s_data_out;
+                    int_out_rdy<= '1';
                 end if;
             end if;
         end if;
@@ -198,6 +217,8 @@ begin
     s_k_len   <= k_len;
     data_out  <= reg_dout(0 to 15);
     out_rdy   <= int_out_rdy;
+    next_key  <= reg_next_key;
+    next_data <= reg_next_data;
     
 end RTL;
 
