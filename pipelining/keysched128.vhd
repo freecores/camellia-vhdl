@@ -3,7 +3,7 @@
 -- Designer:      Paolo Fulgoni <pfulgoni@opencores.org>
 --
 -- Create Date:   09/14/2007
--- Last Update:   10/20/2007
+-- Last Update:   04/09/2008
 -- Project Name:  camellia-vhdl
 -- Description:   Key schedule only for 128-bit keys
 --
@@ -113,7 +113,7 @@ begin
             reg4_r  <= (others=>'0');
             reg4_kl <= (others=>'0');
         else
-            if (clk'event and clk = '1') then -- rising clock edge
+            if (rising_edge(clk)) then -- rising clock edge
                 reg1_l  <= f1_in;
                 reg1_r  <= kl_in(64 to 127);
                 reg1_kl <= kl_in;

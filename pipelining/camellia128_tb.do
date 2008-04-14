@@ -10,11 +10,10 @@ vcom -quiet camellia128.vhd
 vcom -quiet camellia128_tb.vhd
 vsim camellia128_tb
 view wave
-add wave -U clk_count
 add wave -divider "camellia128"
 add wave -HEX -ports /uut/*
 add wave -divider "key"
-add wave -HEX -ports /uut/key/*
+add wave -HEX -ports /uut/key_sched/*
 add wave -divider "six1"
 add wave -HEX -ports /uut/six1/*
 add wave -divider "fl1"

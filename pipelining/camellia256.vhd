@@ -3,7 +3,7 @@
 -- Designer:      Paolo Fulgoni <pfulgoni@opencores.org>
 --
 -- Create Date:   09/15/2007
--- Last Update:   01/16/2008
+-- Last Update:   04/09/2008
 -- Project Name:  camellia-vhdl
 -- Description:   Camellia top level module, for 128/192/256-bit keys
 --
@@ -890,7 +890,7 @@ begin
             reg_r128_6  <= (others=>'0');
             reg_l128_7  <= (others=>'0');
             reg_r128_7  <= (others=>'0');
-        elsif( clk'event and clk = '1') then
+        elsif( rising_edge(clk)) then
             reg_m       <= m;
             reg_kl      <= k(0 to 127);
             reg_kr_int  <= kr_int;

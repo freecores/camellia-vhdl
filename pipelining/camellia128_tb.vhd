@@ -3,7 +3,7 @@
 -- Designer:      Paolo Fulgoni <pfulgoni@opencores.org>
 --
 -- Create Date:   09/14/2007
--- Last Update:   01/16/2008
+-- Last Update:   04/09/2008
 -- Project Name:  camellia-vhdl
 -- Description:   VHDL Test Bench for module CAMELLIA128
 --
@@ -35,42 +35,46 @@ ARCHITECTURE behavior of camellia128_tb is
     -- Component Declaration for the Unit Under Test (UUT)
     component CAMELLIA128 is
         port(
-                reset : in STD_LOGIC;
-                clk   : in STD_LOGIC;
-                m     : in STD_LOGIC_VECTOR (0 to 127);
-                k     : in STD_LOGIC_VECTOR (0 to 127);
-                dec   : in STD_LOGIC;
-                c     : out STD_LOGIC_VECTOR (0 to 127)
+                reset      : in  STD_LOGIC;
+                clk        : in  STD_LOGIC;
+                input      : in  STD_LOGIC_VECTOR (0 to 127);
+                input_en   : in  STD_LOGIC;
+                key        : in  STD_LOGIC_VECTOR (0 to 127);
+                enc_dec    : in  STD_LOGIC;
+                output     : out STD_LOGIC_VECTOR (0 to 127);
+                output_rdy : out STD_LOGIC
                 );
     end component;
 
     --Inputs
-    signal reset : STD_LOGIC;
-    signal clk   : STD_LOGIC;
-    signal m     : STD_LOGIC_VECTOR(0 to 127) := (others=>'0');
-    signal k     : STD_LOGIC_VECTOR(0 to 127) := (others=>'0');
-    signal dec   : STD_LOGIC;
+    signal reset    : STD_LOGIC;
+    signal clk      : STD_LOGIC;
+    signal input    : STD_LOGIC_VECTOR(0 to 127) := (others=>'0');
+    signal input_en : STD_LOGIC := '0';
+    signal key      : STD_LOGIC_VECTOR(0 to 127) := (others=>'0');
+    signal enc_dec  : STD_LOGIC;
 
     --Output
-    signal c     : STD_LOGIC_VECTOR(0 to 127);
+    signal output     : STD_LOGIC_VECTOR(0 to 127);
+    signal output_rdy : STD_LOGIC;
 
     -- Time constants
     constant ClockPeriod : TIME := 5 ns;
 
-    -- Misc
-    signal clk_count : INTEGER range 0 to 30;
 
 begin
 
     -- Instantiate the Unit Under Test (UUT)
     uut: CAMELLIA128
     port map(
-        reset => reset,
-        clk   => clk,
-        m     => m,
-        k     => k,
-        dec   => dec,
-        c     => c
+        reset      => reset,
+        clk        => clk,
+        input      => input,
+        input_en   => input_en,
+        key        => key,
+        enc_dec    => enc_dec,
+        output     => output,
+        output_rdy => output_rdy
     );
 
     ck  : process
@@ -84,28 +88,23 @@ begin
     process
     begin
         reset <= '1';
-        clk_count <= 0;
         wait for ClockPeriod*2; --falling clock edge
         reset <= '0';
         wait until clk = '1';
-        m     <= X"0123456789ABCDEFFEDCBA9876543210";
-        k     <= X"0123456789ABCDEFFEDCBA9876543210";
-        dec   <= '0';
+        input     <= X"0123456789ABCDEFFEDCBA9876543210";
+        key       <= X"0123456789ABCDEFFEDCBA9876543210";
+        enc_dec   <= '0';
+        input_en  <= '1';
         wait until clk = '1';
-        m     <= X"17E02528D6655CEA7BE6B8548FC2DA65";
-        k     <= X"FEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFE";
-        dec   <= '1';
-        clk_count <= clk_count + 1;
+        input     <= X"17E02528D6655CEA7BE6B8548FC2DA65";
+        key       <= X"FEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFE";
+        enc_dec   <= '1';
         wait until clk = '1';
-        m     <= X"67673138549669730857065648EABE43";
-        k     <= X"0123456789ABCDEFFEDCBA9876543210";
-        dec   <= '1';
-        clk_count <= clk_count + 1;
-        for I in 0 to 26 loop
-            wait until clk = '1';
-            clk_count <= clk_count + 1;
-        end loop;
-        
+        input     <= X"67673138549669730857065648EABE43";
+        key       <= X"0123456789ABCDEFFEDCBA9876543210";
+        enc_dec   <= '1';
+        wait until clk = '1';
+        input_en  <= '0'; 
         wait;
     end process;
 

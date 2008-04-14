@@ -3,7 +3,7 @@
 -- Designer:      Paolo Fulgoni <pfulgoni@opencores.org>
 --
 -- Create Date:   09/14/2007
--- Last Update:   10/08/2007
+-- Last Update:   04/09/2008
 -- Project Name:  camellia-vhdl
 -- Description:   FL and FL^-1 functions, for 128/192/256-bit key en/decryption
 --
@@ -102,7 +102,7 @@ architecture RTL of FL256 is
             reg_fl_in  <= (others=>'0');
             reg_fli_in <= (others=>'0');
         else
-            if (clk'event and clk = '1') then -- rising clock edge
+            if (rising_edge(clk)) then -- rising clock edge
                 reg_fl_in  <= fl_in;
                 reg_fli_in <= fli_in;
             end if;

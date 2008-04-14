@@ -3,7 +3,7 @@
 -- Designer:      Paolo Fulgoni <pfulgoni@opencores.org>
 --
 -- Create Date:   09/14/2007
--- Last Update:   10/03/2007
+-- Last Update:   04/09/2008
 -- Project Name:  camellia-vhdl
 -- Description:   F function
 --
@@ -42,50 +42,41 @@ architecture RTL of F is
     -- S-BOX
     component SBOX1 is
         port  (
-                addra : IN STD_LOGIC_VECTOR(0 to 7);
-                addrb : IN STD_LOGIC_VECTOR(0 to 7);
-                clka  : IN STD_LOGIC;
-                clkb  : IN STD_LOGIC;
+                clk   : IN  STD_LOGIC;
+                addra : IN  STD_LOGIC_VECTOR(0 to 7);
+                addrb : IN  STD_LOGIC_VECTOR(0 to 7);
                 douta : OUT STD_LOGIC_VECTOR(0 to 7);
-                doutb : OUT STD_LOGIC_VECTOR(0 to 7);
-                ena   : IN STD_LOGIC;
-                enb   : IN STD_LOGIC
+                doutb : OUT STD_LOGIC_VECTOR(0 to 7)
                 );
     end component;
     component SBOX2 is
         port  (
-                addra : IN STD_LOGIC_VECTOR(0 to 7);
-                addrb : IN STD_LOGIC_VECTOR(0 to 7);
-                clka  : IN STD_LOGIC;
-                clkb  : IN STD_LOGIC;
+                clk   : IN  STD_LOGIC;
+                addra : IN  STD_LOGIC_VECTOR(0 to 7);
+                addrb : IN  STD_LOGIC_VECTOR(0 to 7);
                 douta : OUT STD_LOGIC_VECTOR(0 to 7);
-                doutb : OUT STD_LOGIC_VECTOR(0 to 7);
-                ena   : IN STD_LOGIC;
-                enb   : IN STD_LOGIC
+                doutb : OUT STD_LOGIC_VECTOR(0 to 7)
+
                 );
     end component;
     component SBOX3 is
         port  (
-                addra : IN STD_LOGIC_VECTOR(0 to 7);
-                addrb : IN STD_LOGIC_VECTOR(0 to 7);
-                clka  : IN STD_LOGIC;
-                clkb  : IN STD_LOGIC;
+                clk   : IN  STD_LOGIC;
+                addra : IN  STD_LOGIC_VECTOR(0 to 7);
+                addrb : IN  STD_LOGIC_VECTOR(0 to 7);
                 douta : OUT STD_LOGIC_VECTOR(0 to 7);
-                doutb : OUT STD_LOGIC_VECTOR(0 to 7);
-                ena   : IN STD_LOGIC;
-                enb   : IN STD_LOGIC
+                doutb : OUT STD_LOGIC_VECTOR(0 to 7)
+
                 );
     end component;
     component SBOX4 is
         port  (
-                addra : IN STD_LOGIC_VECTOR(0 to 7);
-                addrb : IN STD_LOGIC_VECTOR(0 to 7);
-                clka  : IN STD_LOGIC;
-                clkb  : IN STD_LOGIC;
+                clk   : IN  STD_LOGIC;
+                addra : IN  STD_LOGIC_VECTOR(0 to 7);
+                addrb : IN  STD_LOGIC_VECTOR(0 to 7);
                 douta : OUT STD_LOGIC_VECTOR(0 to 7);
-                doutb : OUT STD_LOGIC_VECTOR(0 to 7);
-                ena   : IN STD_LOGIC;
-                enb   : IN STD_LOGIC
+                doutb : OUT STD_LOGIC_VECTOR(0 to 7)
+
                 );
     end component;
 
@@ -99,7 +90,6 @@ architecture RTL of F is
 
     signal pb1, pb2, pb3, pb4, pb5, pb6, pb7, pb8 : STD_LOGIC_VECTOR (0 to 7);
 
-    signal en : STD_LOGIC;
 
     begin
 
@@ -116,16 +106,15 @@ architecture RTL of F is
 
 
         -- S-FUNCTION
-        en <= not reset;
 
         S1 : SBOX1
-            port map(y8, y1, clk, clk, so8, so1, en, en);
+            port map(clk, y8, y1, so8, so1);
         S2 : SBOX2
-            port map(y5, y2, clk, clk, so5, so2, en, en);
+            port map(clk, y5, y2, so5, so2);
         S3 : SBOX3
-            port map(y6, y3, clk, clk, so6, so3, en, en);
+            port map(clk, y6, y3, so6, so3);
         S4 : SBOX4
-            port map(y7, y4, clk, clk, so7, so4, en, en);
+            port map(clk, y7, y4, so7, so4);
 
         -- P-FUNCTION
         pa8 <= so8 xor pa2;

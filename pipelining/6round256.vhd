@@ -3,7 +3,7 @@
 -- Designer:      Paolo Fulgoni <pfulgoni@opencores.org>
 --
 -- Create Date:   09/14/2007
--- Last Update:   10/20/2007
+-- Last Update:   04/09/2008
 -- Project Name:  camellia-vhdl
 -- Description:   Six rounds of F, for 128/192/256-bit key en/decryption
 --
@@ -303,7 +303,7 @@ begin
             reg6_l <= (others=>'0');
             reg6_r <= (others=>'0');
         else
-            if (clk'event and clk = '1') then -- rising clock edge
+            if (rising_edge(clk)) then -- rising clock edge
                 reg1_l <= f1_in;
                 reg1_r <= r_in;
                 reg2_l <= f2_in;

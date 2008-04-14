@@ -3,7 +3,7 @@
 -- Designer:      Paolo Fulgoni <pfulgoni@opencores.org>
 --
 -- Create Date:   09/14/2007
--- Last Update:   09/22/2007
+-- Last Update:   04/09/2008
 -- Project Name:  camellia-vhdl
 -- Description:   Dual-port SBOX3
 --
@@ -30,14 +30,11 @@ use IEEE.std_logic_1164.all;
 
 entity SBOX3 is
     port  (
-            addra : IN STD_LOGIC_VECTOR(0 to 7);
-            addrb : IN STD_LOGIC_VECTOR(0 to 7);
-            clka  : IN STD_LOGIC;
-            clkb  : IN STD_LOGIC;
+    		clk   : IN  STD_LOGIC;
+            addra : IN  STD_LOGIC_VECTOR(0 to 7);
+            addrb : IN  STD_LOGIC_VECTOR(0 to 7);
             douta : OUT STD_LOGIC_VECTOR(0 to 7);
-            doutb : OUT STD_LOGIC_VECTOR(0 to 7);
-            ena   : IN STD_LOGIC;
-            enb   : IN STD_LOGIC
+            doutb : OUT STD_LOGIC_VECTOR(0 to 7)
             );
 end SBOX3;
 
@@ -45,38 +42,29 @@ architecture RTL of SBOX3 is
 
     component SBOX1 is
         port  (
-                addra : IN STD_LOGIC_VECTOR(0 to 7);
-                addrb : IN STD_LOGIC_VECTOR(0 to 7);
-                clka  : IN STD_LOGIC;
-                clkb  : IN STD_LOGIC;
+                clk   : IN  STD_LOGIC;
+                addra : IN  STD_LOGIC_VECTOR(0 to 7);
+                addrb : IN  STD_LOGIC_VECTOR(0 to 7);
                 douta : OUT STD_LOGIC_VECTOR(0 to 7);
-                doutb : OUT STD_LOGIC_VECTOR(0 to 7);
-                ena   : IN STD_LOGIC;
-                enb   : IN STD_LOGIC
+                doutb : OUT STD_LOGIC_VECTOR(0 to 7)
                 );
     end component;
 
     -- SBOX1 signals
     signal s1_addra : STD_LOGIC_VECTOR(0 to 7);
     signal s1_addrb : STD_LOGIC_VECTOR(0 to 7);
-    signal s1_clka  : STD_LOGIC;
-    signal s1_clkb  : STD_LOGIC;
+    signal s1_clk  : STD_LOGIC;
     signal s1_douta : STD_LOGIC_VECTOR(0 to 7);
     signal s1_doutb : STD_LOGIC_VECTOR(0 to 7);
-    signal s1_ena    : STD_LOGIC;
-    signal s1_enb    : STD_LOGIC;
 
 begin
 
     S1 : SBOX1
-        port map(s1_addra, s1_addrb, s1_clka, s1_clkb, s1_douta, s1_doutb, s1_ena, s1_enb);
+        port map(s1_clk, s1_addra, s1_addrb, s1_douta, s1_doutb);
 
+    s1_clk   <= clk;
     s1_addra <= addra;
     s1_addrb <= addrb;
-    s1_clka  <= clka;
-    s1_clkb  <= clkb;
-    s1_ena   <= ena;
-    s1_enb   <= enb;
 
     douta <= s1_douta(7) & s1_douta(0 to 6);
     doutb <= s1_doutb(7) & s1_doutb(0 to 6);

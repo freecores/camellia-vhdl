@@ -3,7 +3,7 @@
 -- Designer:      Paolo Fulgoni <pfulgoni@opencores.org>
 --
 -- Create Date:   09/14/2007
--- Last Update:   01/09/2008
+-- Last Update:   04/09/2008
 -- Project Name:  camellia-vhdl
 -- Description:   Camellia top level module, only for 128-bit key en/decryption
 --
@@ -31,12 +31,14 @@ use IEEE.std_logic_unsigned.all;
 
 entity CAMELLIA128 is
     port(
-            reset : in STD_LOGIC;
-            clk   : in STD_LOGIC;
-            m     : in STD_LOGIC_VECTOR (0 to 127);  -- input data
-            k     : in STD_LOGIC_VECTOR (0 to 127);  -- key
-            dec   : in STD_LOGIC;                    -- dec=0 enc, dec=1 dec
-            c     : out STD_LOGIC_VECTOR (0 to 127)  -- en/decrypted data
+            reset      : in  STD_LOGIC;
+            clk        : in  STD_LOGIC;
+            input      : in  STD_LOGIC_VECTOR (0 to 127);  -- input data
+            input_en   : in  STD_LOGIC;                    -- input enable
+            key        : in  STD_LOGIC_VECTOR (0 to 127);  -- key
+            enc_dec    : in  STD_LOGIC;                    -- dec=0 enc, dec=1 dec
+            output     : out STD_LOGIC_VECTOR (0 to 127);  -- en/decrypted data
+            output_rdy : out STD_LOGIC                     -- output ready
             );
 end CAMELLIA128;
 
@@ -129,6 +131,7 @@ architecture RTL of CAMELLIA128 is
     signal reg_m   : STD_LOGIC_VECTOR (0 to 127);
     signal reg_k   : STD_LOGIC_VECTOR (0 to 127);
     signal reg_dec : STD_LOGIC;
+    signal reg_rdy : STD_LOGIC;
 
     -- used by pre-whitening
     signal kw1_enc     : STD_LOGIC_VECTOR (0 to 63);
@@ -155,54 +158,78 @@ architecture RTL of CAMELLIA128 is
     -- registers used during key schedule
     signal reg_a1_m   : STD_LOGIC_VECTOR (0 to 127);
     signal reg_a1_dec : STD_LOGIC;
+    signal reg_a1_rdy : STD_LOGIC;
     signal reg_a2_m   : STD_LOGIC_VECTOR (0 to 127);
     signal reg_a2_dec : STD_LOGIC;
+    signal reg_a2_rdy : STD_LOGIC;
     signal reg_a3_m   : STD_LOGIC_VECTOR (0 to 127);
     signal reg_a3_dec : STD_LOGIC;
+    signal reg_a3_rdy : STD_LOGIC;
     signal reg_a4_m   : STD_LOGIC_VECTOR (0 to 127);
     signal reg_a4_dec : STD_LOGIC;
+    signal reg_a4_rdy : STD_LOGIC;
 
     -- registers used during 6-rounds and fls
     signal reg_b1_dec  : STD_LOGIC;
     signal reg_b1_k    : STD_LOGIC_VECTOR (0 to 255);
+    signal reg_b1_rdy  : STD_LOGIC;
     signal reg_b2_dec  : STD_LOGIC;
     signal reg_b2_k    : STD_LOGIC_VECTOR (0 to 255);
+    signal reg_b2_rdy  : STD_LOGIC;
     signal reg_b3_dec  : STD_LOGIC;
     signal reg_b3_k    : STD_LOGIC_VECTOR (0 to 255);
+    signal reg_b3_rdy  : STD_LOGIC;
     signal reg_b4_dec  : STD_LOGIC;
     signal reg_b4_k    : STD_LOGIC_VECTOR (0 to 255);
+    signal reg_b4_rdy  : STD_LOGIC;
     signal reg_b5_dec  : STD_LOGIC;
     signal reg_b5_k    : STD_LOGIC_VECTOR (0 to 255);
+    signal reg_b5_rdy  : STD_LOGIC;
     signal reg_b6_dec  : STD_LOGIC;
     signal reg_b6_k    : STD_LOGIC_VECTOR (0 to 255);
+    signal reg_b6_rdy  : STD_LOGIC;
     signal reg_b7_dec  : STD_LOGIC;
     signal reg_b7_k    : STD_LOGIC_VECTOR (0 to 255);
+    signal reg_b7_rdy  : STD_LOGIC;
     signal reg_b8_dec  : STD_LOGIC;
     signal reg_b8_k    : STD_LOGIC_VECTOR (0 to 255);
+    signal reg_b8_rdy  : STD_LOGIC;
     signal reg_b9_dec  : STD_LOGIC;
     signal reg_b9_k    : STD_LOGIC_VECTOR (0 to 255);
+    signal reg_b9_rdy  : STD_LOGIC;
     signal reg_b10_dec : STD_LOGIC;
     signal reg_b10_k   : STD_LOGIC_VECTOR (0 to 255);
+    signal reg_b10_rdy : STD_LOGIC;
     signal reg_b11_dec : STD_LOGIC;
     signal reg_b11_k   : STD_LOGIC_VECTOR (0 to 255);
+    signal reg_b11_rdy : STD_LOGIC;
     signal reg_b12_dec : STD_LOGIC;
     signal reg_b12_k   : STD_LOGIC_VECTOR (0 to 255);
+    signal reg_b12_rdy : STD_LOGIC;
     signal reg_b13_dec : STD_LOGIC;
     signal reg_b13_k   : STD_LOGIC_VECTOR (0 to 255);
+    signal reg_b13_rdy : STD_LOGIC;
     signal reg_b14_dec : STD_LOGIC;
     signal reg_b14_k   : STD_LOGIC_VECTOR (0 to 255);
+    signal reg_b14_rdy : STD_LOGIC;
     signal reg_b15_dec : STD_LOGIC;
     signal reg_b15_k   : STD_LOGIC_VECTOR (0 to 255);
+    signal reg_b15_rdy : STD_LOGIC;
     signal reg_b16_dec : STD_LOGIC;
     signal reg_b16_k   : STD_LOGIC_VECTOR (0 to 255);
+    signal reg_b16_rdy : STD_LOGIC;
     signal reg_b17_dec : STD_LOGIC;
     signal reg_b17_k   : STD_LOGIC_VECTOR (0 to 255);
+    signal reg_b17_rdy : STD_LOGIC;
     signal reg_b18_dec : STD_LOGIC;
     signal reg_b18_k   : STD_LOGIC_VECTOR (0 to 255);
+    signal reg_b18_rdy : STD_LOGIC;
     signal reg_b19_dec : STD_LOGIC;
     signal reg_b19_k   : STD_LOGIC_VECTOR (0 to 255);
+    signal reg_b19_rdy : STD_LOGIC;
     signal reg_b20_dec : STD_LOGIC;
     signal reg_b20_k   : STD_LOGIC_VECTOR (0 to 255);
+    signal reg_b20_rdy : STD_LOGIC;
 
     -- components outputs
     signal out_ksched  : STD_LOGIC_VECTOR (0 to 255); -- key schedule
@@ -223,7 +250,7 @@ architecture RTL of CAMELLIA128 is
 
 begin
 
-    KEY: KEYSCHED128
+    KEY_SCHED: KEYSCHED128
     PORT MAP (
             reset  => reset,
             clk    => clk,
@@ -426,112 +453,163 @@ begin
             reg_m       <= (others=>'0');
             reg_k       <= (others=>'0');
             reg_dec     <= '0';
-            c           <= (others=>'0');
-            reg_a1_m    <= (others=>'0');
-            reg_a1_dec  <= '0';
-            reg_a2_m    <= (others=>'0');
-            reg_a2_dec  <= '0';
-            reg_a3_m    <= (others=>'0');
-            reg_a3_dec  <= '0';
-            reg_a4_m    <= (others=>'0');
-            reg_a4_dec  <= '0';
-            reg_b1_dec  <= '0';
-            reg_b1_k    <= (others=>'0');
-            reg_b2_dec  <= '0';
-            reg_b2_k    <= (others=>'0');
-            reg_b3_dec  <= '0';
-            reg_b3_k    <= (others=>'0');
-            reg_b4_dec  <= '0';
-            reg_b4_k    <= (others=>'0');
-            reg_b5_dec  <= '0';
-            reg_b5_k    <= (others=>'0');
-            reg_b6_dec  <= '0';
-            reg_b6_k    <= (others=>'0');
-            reg_b7_dec  <= '0';
-            reg_b7_k    <= (others=>'0');
-            reg_b8_dec  <= '0';
-            reg_b8_k    <= (others=>'0');
-            reg_b9_dec  <= '0';
-            reg_b9_k    <= (others=>'0');
-            reg_b10_dec <= '0';
-            reg_b10_k   <= (others=>'0');
-            reg_b11_dec <= '0';
-            reg_b11_k   <= (others=>'0');
-            reg_b12_dec <= '0';
-            reg_b12_k   <= (others=>'0');
-            reg_b13_dec <= '0';
-            reg_b13_k   <= (others=>'0');
-            reg_b14_dec <= '0';
-            reg_b14_k   <= (others=>'0');
-            reg_b15_dec <= '0';
-            reg_b15_k   <= (others=>'0');
-            reg_b16_dec <= '0';
-            reg_b16_k   <= (others=>'0');
-            reg_b17_dec <= '0';
-            reg_b17_k   <= (others=>'0');
-            reg_b18_dec <= '0';
-            reg_b18_k   <= (others=>'0');
-            reg_b19_dec <= '0';
-            reg_b19_k   <= (others=>'0');
-            reg_b20_dec <= '0';
-            reg_b20_k   <= (others=>'0');
-        elsif( clk'event and clk = '1') then
-            reg_m       <= m;
-            reg_k       <= k;
-            reg_dec     <= dec;
+            reg_rdy     <= '0';
+            --reg_a1_m    <= (others=>'0');
+            --reg_a1_dec  <= '0';
+            reg_a1_rdy  <= '0';
+            --reg_a2_m    <= (others=>'0');
+            --reg_a2_dec  <= '0';
+            reg_a2_rdy  <= '0';
+            --reg_a3_m    <= (others=>'0');
+            --reg_a3_dec  <= '0';
+            reg_a3_rdy  <= '0';
+            --reg_a4_m    <= (others=>'0');
+            --reg_a4_dec  <= '0';
+            reg_a4_rdy  <= '0';
+            --reg_b1_dec  <= '0';
+            --reg_b1_k    <= (others=>'0');
+            reg_b1_rdy  <= '0';
+            --reg_b2_dec  <= '0';
+            --reg_b2_k    <= (others=>'0');
+            reg_b2_rdy  <= '0';
+            --reg_b3_dec  <= '0';
+            --reg_b3_k    <= (others=>'0');
+            reg_b3_rdy  <= '0';
+            --reg_b4_dec  <= '0';
+            --reg_b4_k    <= (others=>'0');
+            reg_b4_rdy  <= '0';
+            --reg_b5_dec  <= '0';
+            --reg_b5_k    <= (others=>'0');
+            reg_b5_rdy  <= '0';
+            --reg_b6_dec  <= '0';
+            --reg_b6_k    <= (others=>'0');
+            reg_b6_rdy  <= '0';
+            --reg_b7_dec  <= '0';
+            --reg_b7_k    <= (others=>'0');
+            reg_b7_rdy  <= '0';
+            --reg_b8_dec  <= '0';
+            --reg_b8_k    <= (others=>'0');
+            reg_b8_rdy  <= '0';
+            --reg_b9_dec  <= '0';
+            --reg_b9_k    <= (others=>'0');
+            reg_b9_rdy  <= '0';
+            --reg_b10_dec <= '0';
+            --reg_b10_k   <= (others=>'0');
+            reg_b10_rdy <= '0';
+            --reg_b11_dec <= '0';
+            --reg_b11_k   <= (others=>'0');
+            reg_b11_rdy <= '0';
+            --reg_b12_dec <= '0';
+            --reg_b12_k   <= (others=>'0');
+            reg_b12_rdy <= '0';
+            --reg_b13_dec <= '0';
+            --reg_b13_k   <= (others=>'0');
+            reg_b13_rdy <= '0';
+            --reg_b14_dec <= '0';
+            --reg_b14_k   <= (others=>'0');
+            reg_b14_rdy <= '0';
+            --reg_b15_dec <= '0';
+            --reg_b15_k   <= (others=>'0');
+            reg_b15_rdy <= '0';
+            --reg_b16_dec <= '0';
+            --reg_b16_k   <= (others=>'0');
+            reg_b16_rdy <= '0';
+            --reg_b17_dec <= '0';
+            --reg_b17_k   <= (others=>'0');
+            reg_b17_rdy <= '0';
+            --reg_b18_dec <= '0';
+            --reg_b18_k   <= (others=>'0');
+            reg_b18_rdy <= '0';
+            --reg_b19_dec <= '0';
+            --reg_b19_k   <= (others=>'0');
+            reg_b19_rdy <= '0';
+            --reg_b20_dec <= '0';
+            --reg_b20_k   <= (others=>'0');
+            reg_b20_rdy <= '0';
+            output_rdy  <= '0';
+        elsif( rising_edge(clk)) then
+            reg_m       <= input;
+            reg_k       <= key;
+            reg_dec     <= enc_dec;
+            reg_rdy     <= input_en;
 
             reg_a1_m    <= reg_m;
             reg_a1_dec  <= reg_dec;
+            reg_a1_rdy  <= reg_rdy;
             reg_a2_m    <= reg_a1_m;
             reg_a2_dec  <= reg_a1_dec;
+            reg_a2_rdy  <= reg_a1_rdy;
             reg_a3_m    <= reg_a2_m;
             reg_a3_dec  <= reg_a2_dec;
+            reg_a3_rdy  <= reg_a2_rdy;
             reg_a4_m    <= reg_a3_m;
             reg_a4_dec  <= reg_a3_dec;
+            reg_a4_rdy  <= reg_a3_rdy;
 
             reg_b1_dec  <= reg_a4_dec;
             reg_b1_k    <= out_ksched;
+            reg_b1_rdy  <= reg_a4_rdy;
             reg_b2_dec  <= reg_b1_dec;
             reg_b2_k    <= reg_b1_k;
+            reg_b2_rdy  <= reg_b1_rdy;
             reg_b3_dec  <= reg_b2_dec;
             reg_b3_k    <= reg_b2_k;
+            reg_b3_rdy  <= reg_b2_rdy;
             reg_b4_dec  <= reg_b3_dec;
             reg_b4_k    <= reg_b3_k;
+            reg_b4_rdy  <= reg_b3_rdy;
             reg_b5_dec  <= reg_b4_dec;
             reg_b5_k    <= reg_b4_k;
+            reg_b5_rdy  <= reg_b4_rdy;
             reg_b6_dec  <= reg_b5_dec;
             reg_b6_k    <= reg_b5_k;
+            reg_b6_rdy  <= reg_b5_rdy;
             reg_b7_dec  <= reg_b6_dec;
             reg_b7_k    <= reg_b6_k;
+            reg_b7_rdy  <= reg_b6_rdy;
             reg_b8_dec  <= reg_b7_dec;
             reg_b8_k    <= reg_b7_k;
+            reg_b8_rdy  <= reg_b7_rdy;
             reg_b9_dec  <= reg_b8_dec;
             reg_b9_k    <= reg_b8_k;
+            reg_b9_rdy  <= reg_b8_rdy;
             reg_b10_dec <= reg_b9_dec;
             reg_b10_k   <= reg_b9_k;
+            reg_b10_rdy <= reg_b9_rdy;
             reg_b11_dec <= reg_b10_dec;
             reg_b11_k   <= reg_b10_k;
+            reg_b11_rdy <= reg_b10_rdy;
             reg_b12_dec <= reg_b11_dec;
             reg_b12_k   <= reg_b11_k;
+            reg_b12_rdy <= reg_b11_rdy;
             reg_b13_dec <= reg_b12_dec;
             reg_b13_k   <= reg_b12_k;
+            reg_b13_rdy <= reg_b12_rdy;
             reg_b14_dec <= reg_b13_dec;
             reg_b14_k   <= reg_b13_k;
+            reg_b14_rdy <= reg_b13_rdy;
             reg_b15_dec <= reg_b14_dec;
             reg_b15_k   <= reg_b14_k;
+            reg_b15_rdy <= reg_b14_rdy;
             reg_b16_dec <= reg_b15_dec;
             reg_b16_k   <= reg_b15_k;
+            reg_b16_rdy <= reg_b15_rdy;
             reg_b17_dec <= reg_b16_dec;
             reg_b17_k   <= reg_b16_k;
+            reg_b17_rdy <= reg_b16_rdy;
             reg_b18_dec <= reg_b17_dec;
             reg_b18_k   <= reg_b17_k;
+            reg_b18_rdy <= reg_b17_rdy;
             reg_b19_dec <= reg_b18_dec;
             reg_b19_k   <= reg_b18_k;
+            reg_b19_rdy <= reg_b18_rdy;
             reg_b20_dec <= reg_b19_dec;
             reg_b20_k   <= reg_b19_k;
+            reg_b20_rdy <= reg_b19_rdy;
 
             -- outputs
-            c <= w3 & w4;
+            output     <= w3 & w4;
+            output_rdy <= reg_b20_rdy;
 
 
         end if;
