@@ -10,11 +10,10 @@ vcom -quiet camellia256.vhd
 vcom -quiet camellia256_tb.vhd
 vsim camellia256_tb
 view wave
-add wave -U clk_count
 add wave -divider "camellia256"
 add wave -HEX -ports /uut/*
 add wave -divider "key"
-add wave -HEX -ports /uut/key/*
+add wave -HEX -ports /uut/key_sched/*
 add wave -divider "six1"
 add wave -HEX -ports /uut/six1/*
 add wave -divider "fl1"
@@ -29,4 +28,4 @@ add wave -divider "fl3"
 add wave -HEX -ports /uut/fl3/*
 add wave -divider "six4"
 add wave -HEX -ports /uut/six4/*
-run 1400 ns
+run 250 ns

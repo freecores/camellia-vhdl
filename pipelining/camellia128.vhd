@@ -3,7 +3,7 @@
 -- Designer:      Paolo Fulgoni <pfulgoni@opencores.org>
 --
 -- Create Date:   09/14/2007
--- Last Update:   04/09/2008
+-- Last Update:   04/14/2008
 -- Project Name:  camellia-vhdl
 -- Description:   Camellia top level module, only for 128-bit key en/decryption
 --
@@ -454,80 +454,32 @@ begin
             reg_k       <= (others=>'0');
             reg_dec     <= '0';
             reg_rdy     <= '0';
-            --reg_a1_m    <= (others=>'0');
-            --reg_a1_dec  <= '0';
             reg_a1_rdy  <= '0';
-            --reg_a2_m    <= (others=>'0');
-            --reg_a2_dec  <= '0';
             reg_a2_rdy  <= '0';
-            --reg_a3_m    <= (others=>'0');
-            --reg_a3_dec  <= '0';
             reg_a3_rdy  <= '0';
-            --reg_a4_m    <= (others=>'0');
-            --reg_a4_dec  <= '0';
             reg_a4_rdy  <= '0';
-            --reg_b1_dec  <= '0';
-            --reg_b1_k    <= (others=>'0');
             reg_b1_rdy  <= '0';
-            --reg_b2_dec  <= '0';
-            --reg_b2_k    <= (others=>'0');
             reg_b2_rdy  <= '0';
-            --reg_b3_dec  <= '0';
-            --reg_b3_k    <= (others=>'0');
             reg_b3_rdy  <= '0';
-            --reg_b4_dec  <= '0';
-            --reg_b4_k    <= (others=>'0');
             reg_b4_rdy  <= '0';
-            --reg_b5_dec  <= '0';
-            --reg_b5_k    <= (others=>'0');
             reg_b5_rdy  <= '0';
-            --reg_b6_dec  <= '0';
-            --reg_b6_k    <= (others=>'0');
             reg_b6_rdy  <= '0';
-            --reg_b7_dec  <= '0';
-            --reg_b7_k    <= (others=>'0');
             reg_b7_rdy  <= '0';
-            --reg_b8_dec  <= '0';
-            --reg_b8_k    <= (others=>'0');
             reg_b8_rdy  <= '0';
-            --reg_b9_dec  <= '0';
-            --reg_b9_k    <= (others=>'0');
             reg_b9_rdy  <= '0';
-            --reg_b10_dec <= '0';
-            --reg_b10_k   <= (others=>'0');
             reg_b10_rdy <= '0';
-            --reg_b11_dec <= '0';
-            --reg_b11_k   <= (others=>'0');
             reg_b11_rdy <= '0';
-            --reg_b12_dec <= '0';
-            --reg_b12_k   <= (others=>'0');
             reg_b12_rdy <= '0';
-            --reg_b13_dec <= '0';
-            --reg_b13_k   <= (others=>'0');
             reg_b13_rdy <= '0';
-            --reg_b14_dec <= '0';
-            --reg_b14_k   <= (others=>'0');
             reg_b14_rdy <= '0';
-            --reg_b15_dec <= '0';
-            --reg_b15_k   <= (others=>'0');
             reg_b15_rdy <= '0';
-            --reg_b16_dec <= '0';
-            --reg_b16_k   <= (others=>'0');
             reg_b16_rdy <= '0';
-            --reg_b17_dec <= '0';
-            --reg_b17_k   <= (others=>'0');
             reg_b17_rdy <= '0';
-            --reg_b18_dec <= '0';
-            --reg_b18_k   <= (others=>'0');
             reg_b18_rdy <= '0';
-            --reg_b19_dec <= '0';
-            --reg_b19_k   <= (others=>'0');
             reg_b19_rdy <= '0';
-            --reg_b20_dec <= '0';
-            --reg_b20_k   <= (others=>'0');
             reg_b20_rdy <= '0';
             output_rdy  <= '0';
-        elsif( rising_edge(clk)) then
+        elsif(rising_edge(clk)) then
             reg_m       <= input;
             reg_k       <= key;
             reg_dec     <= enc_dec;

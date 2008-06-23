@@ -3,7 +3,7 @@
 -- Designer:      Paolo Fulgoni <pfulgoni@opencores.org>
 --
 -- Create Date:   09/14/2007
--- Last Update:   04/09/2008
+-- Last Update:   04/14/2008
 -- Project Name:  camellia-vhdl
 -- Description:   Dual-port SBOX4
 --
@@ -63,8 +63,8 @@ begin
         port map(s1_clk, s1_addra, s1_addrb, s1_douta, s1_doutb);
 
     s1_clk   <= clk;
-    s1_addra <= addra;
-    s1_addrb <= addrb;
+    s1_addra <= addra(1 to 7) & addra(0);
+    s1_addrb <= addrb(1 to 7) & addrb(0);
 
     douta <= s1_douta;
     doutb <= s1_doutb;
